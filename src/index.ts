@@ -42,6 +42,7 @@ try {
   console.log('🛣️  TSOA routes registered at /api');
 } catch (error) {
   console.log('🛣️  TSOA routes not found. Run "npm run swagger" to generate them.');
+  console.log(error);
 }
 
 // Basic routes
@@ -66,7 +67,7 @@ app.listen(config.port, () => {
   if (config.nodeEnv === 'development') {
     console.log(`📚 API Documentation: http://localhost:${config.port}/api-docs`);
   }
-  console.log(`❤️  Health Check: http://localhost:${config.port}/health`);
+  console.log(`❤️  Health Check: http://localhost:${config.port}/api/health`);
 });
 
 export default app;

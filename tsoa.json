@@ -15,14 +15,15 @@
     "produces": ["application/json"],
     "securityDefinitions": {
       "jwt": {
-        "type": "apiKey",
-        "name": "Authorization",
-        "in": "header",
-        "description": "JWT token for authentication. Format: Bearer {token}"
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token for authentication"
       }
     }
   },
   "routes": {
+    "authenticationModule": "src/middleware/authentication.ts",
     "routesDir": "src/routes",
     "routesFileName": "routes.ts",
     "middleware": "express"
