@@ -1,15 +1,17 @@
 # Node.js Express TypeScript Boilerplate
 
-A modern Node.js Express TypeScript backend API template project with complete authentication system, auto-generated API documentation, database integration, and Docker deployment configuration.
+A modern Node.js Express TypeScript backend API template project with complete authentication system, auto-generated API documentation, unified response format, and modular architecture.
 
 ## 🚀 Features
 
 - **TypeScript** - Complete type safety support
 - **Express.js** - Fast, minimalist web framework
 - **TSOA** - Auto-generated Swagger documentation and type-safe routes
+- **JWT Authentication** - Complete authentication system with role-based access control
+- **Unified API Response** - Consistent response format across all endpoints
 - **Security** - Helmet and CORS protection
 - **ESLint + Prettier** - Code quality and formatting
-- **Modular Architecture** - Well-organized project structure
+- **Modular Architecture** - Well-organized project structure with response types
 - **Development Tools** - Hot reload with nodemon
 
 ## 📋 System Requirements
@@ -40,6 +42,8 @@ The server will start at `http://localhost:3000`.
 - Main endpoint: `http://localhost:3000`
 - Health check: `http://localhost:3000/health`
 - **API Documentation**: `http://localhost:3000/api-docs` (development only)
+- **Authentication**: `http://localhost:3000/auth/login`
+- **User Management**: `http://localhost:3000/users/profile` (requires authentication)
 
 ## 📁 Project Structure
 
@@ -48,19 +52,26 @@ The server will start at `http://localhost:3000`.
 │   ├── config/          # Configuration files
 │   │   └── index.ts     # Environment configuration
 │   ├── controllers/     # TSOA API controllers
-│   │   └── HealthController.ts  # Health check endpoints
+│   │   ├── AuthController.ts    # Authentication endpoints
+│   │   ├── HealthController.ts  # Health check endpoints
+│   │   ├── UserController.ts    # User management endpoints
+│   │   └── response/    # Response type definitions
+│   │       ├── auth.res.ts      # Authentication response types
+│   │       ├── common.res.ts    # Common response types and builder
+│   │       ├── user.res.ts      # User response types
+│   │       └── index.ts         # Unified export
 │   ├── middleware/      # Express middleware
+│   │   ├── authentication.ts   # JWT authentication middleware
 │   │   └── errorHandler.ts     # Global error handling
 │   ├── routes/          # Auto-generated TSOA routes
 │   │   └── routes.ts    # Generated Express routes
 │   ├── swagger/         # Auto-generated Swagger documentation
 │   │   └── swagger.json # OpenAPI 3.0 specification
 │   ├── services/        # Business logic services (future)
-│   ├── types/           # TypeScript type definitions (future)
 │   ├── utils/           # Utility functions (future)
 │   └── index.ts         # Application entry point
-├── .eslintrc.js         # ESLint configuration with comments
-├── .prettierrc.js       # Prettier configuration with comments
+├── .eslintrc.js         # ESLint configuration
+├── .prettierrc.js       # Prettier configuration
 ├── tsconfig.json        # TypeScript configuration
 ├── tsoa.json           # TSOA configuration
 ├── package.json         # Project dependencies and scripts
@@ -73,52 +84,109 @@ The server will start at `http://localhost:3000`.
 - `npm run build` - Build production version (includes Swagger generation)
 - `npm run start` - Start production server
 - `npm run swagger` - Generate TSOA routes and Swagger documentation
+- `npm run clean` - Clean dist directory
 - `npm run lint` - Run ESLint code quality check
+- `npm run lint:fix` - Run ESLint and fix issues automatically
 - `npm run format` - Format code with Prettier
+- `npm run format:check` - Check code formatting with Prettier
 - `npm run typecheck` - Run TypeScript type checking
 
 ## 📚 API Endpoints
 
 ### Health Check
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Main endpoint with server info |
-| GET | `/api/health` | TSOA health check with detailed info |
-| GET | `/api/health/ping` | Simple ping endpoint |
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| GET | `/` | Main endpoint with server info | None |
+| GET | `/api/health` | TSOA health check with detailed info | None |
+| GET | `/api/health/ping` | Simple ping endpoint | None |
+
+### Authentication
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| POST | `/auth/login` | User login with email/password | None |
+| POST | `/auth/demo-credentials` | Get demo credentials for testing | None |
+
+### User Management
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| GET | `/users/profile` | Get current user profile | JWT Required |
+| GET | `/users/dashboard` | Get user dashboard with stats | JWT Required |
+| GET | `/users/` | Get all users (admin only) | JWT Required (Admin) |
 
 ### API Documentation
 | Method | Endpoint | Description | Available |
 |--------|----------|-------------|-----------|
 | GET | `/api-docs` | Swagger UI documentation | Development only |
 
-### Response Examples
+## 🔐 Authentication System
 
-**GET /api/health**
+### Demo Credentials
+
+For testing purposes, use these demo credentials:
+
+**Admin User:**
+- Email: `admin@example.com`
+- Password: `admin123`
+- Role: `admin`
+
+**Regular User:**
+- Email: `user@example.com`
+- Password: `password123`
+- Role: `user`
+
+### JWT Token Usage
+
+1. **Login** to get JWT token:
+```bash
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password123"}'
+```
+
+2. **Use token** in subsequent requests:
+```bash
+curl -X GET http://localhost:3000/users/profile \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Response Format
+
+All API responses follow a unified format:
+
+**Success Response:**
 ```json
 {
-  "status": "OK",
-  "timestamp": "2023-12-01T10:30:00.000Z",
-  "uptime": 123.456,
-  "environment": "development",
-  "version": "1.0.0"
+  "success": true,
+  "data": { /* response data */ },
+  "message": "Operation successful",
+  "timestamp": "2023-12-01T10:30:00.000Z"
 }
 ```
 
-**GET /api/health/ping**
+**Error Response:**
 ```json
 {
-  "message": "pong"
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Error description",
+    "details": { /* optional error details */ }
+  },
+  "timestamp": "2023-12-01T10:30:00.000Z"
 }
 ```
 
 ## ⚙️ Configuration
 
-The application uses environment variables for configuration. Currently supported:
+The application uses environment variables for configuration:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `NODE_ENV` | Environment mode | `development` |
 | `PORT` | Server port | `3000` |
+| `JWT_SECRET` | JWT signing secret | `your-super-secret-jwt-key` |
+| `JWT_EXPIRES_IN` | JWT token expiration | `24h` |
+| `JWT_REFRESH_EXPIRES_IN` | Refresh token expiration | `7d` |
 
 ## 🧪 Development
 
@@ -140,39 +208,32 @@ npm run typecheck
 ### File Structure Guidelines
 
 - **src/config/** - Configuration and environment variables
-- **src/controllers/** - API route handlers (to be added)
-- **src/middleware/** - Express middleware functions (to be added)
-- **src/services/** - Business logic and external service integrations (to be added)
-- **src/types/** - TypeScript type definitions (to be added)
-- **src/utils/** - Utility functions and helpers (to be added)
+- **src/controllers/** - API route handlers with TSOA decorators
+- **src/controllers/response/** - Response type definitions organized by feature
+- **src/middleware/** - Express middleware functions (authentication, error handling)
+- **src/services/** - Business logic and external service integrations (future)
+- **src/utils/** - Utility functions and helpers (future)
 
 ## 🔄 Development Workflow
 
 1. **Start development server**: `npm run dev`
 2. **Make changes** to TypeScript files in `src/`
 3. **Server automatically restarts** when files change
-4. **Test endpoints** using browser or API client
-5. **Check code quality**: `npm run lint`
-6. **Format code**: `npm run format`
+4. **TSOA regenerates** routes and Swagger documentation automatically
+5. **Test endpoints** using Swagger UI at `http://localhost:3000/api-docs`
+6. **Check code quality**: `npm run lint`
+7. **Format code**: `npm run format`
 
 ## 🚀 Production Deployment
 
 ### Build Process
-
-The build process compiles TypeScript files to JavaScript for production use:
 
 ```bash
 # Build the application
 npm run build
 ```
 
-This creates a `dist/` directory with compiled JavaScript files:
-```
-dist/
-├── config/
-│   └── index.js        # Compiled configuration
-└── index.js           # Compiled main application
-```
+This creates a `dist/` directory with compiled JavaScript files.
 
 ### Deployment Methods
 
@@ -182,16 +243,10 @@ npm run build
 npm start
 ```
 
-#### Method 2: Direct execution
+#### Method 2: With environment variables
 ```bash
 npm run build
-node dist/index.js
-```
-
-#### Method 3: With environment variables
-```bash
-npm run build
-NODE_ENV=production node dist/index.js
+NODE_ENV=production JWT_SECRET=your-production-secret node dist/index.js
 ```
 
 ### Complete Production Deployment
@@ -207,31 +262,19 @@ npm run build
 npm start
 ```
 
-### Development vs Production
-
-| Environment | Command | File Type | Purpose |
-|-------------|---------|-----------|---------|
-| **Development** | `npm run dev` | TypeScript (`.ts`) | Development with hot reload |
-| **Production** | `npm start` | JavaScript (`.js`) | Optimized for deployment |
-
-### Why Build?
-
-- **Performance**: JavaScript execution is faster than TypeScript transpilation
-- **Deployment**: Production environments don't need TypeScript compiler
-- **File Size**: Removes type information, smaller files
-- **Compatibility**: Ensures compatibility with target Node.js version
-
 ## 🚧 Roadmap
 
 This boilerplate is designed to be extended with additional features:
 
 - [x] TSOA integration for auto-generated Swagger documentation
-- [x] Error handling middleware
-- [ ] JWT authentication system
+- [x] Error handling middleware with unified response format
+- [x] JWT authentication system with role-based access control
+- [x] CRUD API endpoints with user management
+- [x] Unified API response format with builder pattern
+- [x] Modular response type definitions
 - [ ] Database integration (TypeORM + MySQL)
-- [ ] CRUD API endpoints
 - [ ] Docker containerization
-- [ ] Deployment scripts
+- [ ] Deployment scripts (build.sh, deploy.sh)
 - [ ] Logging system
 - [ ] Testing framework
 - [ ] Rate limiting
@@ -259,6 +302,9 @@ If you encounter any issues:
 
 ## 📝 Notes
 
-- This is a basic boilerplate that will be extended with more features
+- This boilerplate includes a complete authentication system with JWT tokens
+- All API responses follow a unified format for consistency
+- Response types are modularly organized by feature
 - The project structure is designed to be scalable and maintainable
-- Configuration files include detailed comments for learning purposes
+- Swagger documentation is automatically generated from TSOA decorators
+- Demo credentials are provided for easy testing
