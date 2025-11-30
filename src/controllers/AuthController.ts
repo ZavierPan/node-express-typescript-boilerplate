@@ -1,37 +1,21 @@
 import { Controller, Post, Body, Route, Tags, Example, Response } from 'tsoa';
 import bcrypt from 'bcryptjs';
-import { generateToken, generateRefreshToken } from '../middleware/authentication';
-import { ApiError } from '../middleware/errorHandler';
-
-/**
- * Login request interface
- */
-interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-/**
- * Login response interface
- */
-interface LoginResponse {
-  message: string;
-  user: {
-    id: string;
-    email: string;
-    role: string;
-  };
-  token: string;
-  refreshToken: string;
-}
-
-/**
- * Error response interface
- */
-interface ErrorResponse {
-  message: string;
-  statusCode: number;
-}
+import {
+  generateToken,
+  generateRefreshToken,
+} from '../middleware/authentication';
+import {
+  ApiResponseBuilder,
+  HttpStatusCode,
+  BaseFailureResponse,
+} from './response/common.res';
+import {
+  LoginRequest,
+  LoginData,
+  LoginResponse,
+  DemoCredentialsData,
+  DemoCredentialsResponse,
+} from './response/auth.res';
 
 /**
  * Authentication controller
@@ -55,14 +39,14 @@ export class AuthController extends Controller {
     email: 'admin@example.com',
     password: 'admin123',
   })
-  @Response<ErrorResponse>(401, 'Invalid credentials')
-  @Response<ErrorResponse>(400, 'Validation error')
+  @Response<BaseFailureResponse>(401, 'Invalid credentials')
+  @Response<BaseFailureResponse>(400, 'Validation error')
   public async login(@Body() loginData: LoginRequest): Promise<LoginResponse> {
     const { email, password } = loginData;
 
     // Input validation
     if (!email || !password) {
-      throw new ApiError(400, 'Email and password are required');
+      return ApiResponseBuilder.badRequest('Email and password are required');
     }
 
     // TODO: Replace with actual database lookup
@@ -85,13 +69,13 @@ export class AuthController extends Controller {
     // Find user by email
     const user = mockUsers.find((u) => u.email === email);
     if (!user) {
-      throw new ApiError(401, 'Invalid email or password');
+      return ApiResponseBuilder.unauthorized('Invalid email or password');
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new ApiError(401, 'Invalid email or password');
+      return ApiResponseBuilder.unauthorized('Invalid email or password');
     }
 
     // Generate tokens
@@ -104,16 +88,18 @@ export class AuthController extends Controller {
     const refreshToken = generateRefreshToken(user.id);
 
     // Return success response
-    return {
-      message: 'Login successful',
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
+    return ApiResponseBuilder.success(
+      {
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        },
+        token,
+        refreshToken,
       },
-      token,
-      refreshToken,
-    };
+      'Login successful'
+    );
   }
 
   /**
@@ -122,24 +108,23 @@ export class AuthController extends Controller {
    * @returns Demo credentials
    */
   @Post('/demo-credentials')
-  public async getDemoCredentials(): Promise<{
-    message: string;
-    credentials: Array<{ email: string; password: string; role: string }>;
-  }> {
-    return {
-      message: 'Demo credentials for testing',
-      credentials: [
-        {
-          email: 'admin@example.com',
-          password: 'admin123',
-          role: 'admin',
-        },
-        {
-          email: 'user@example.com',
-          password: 'password123',
-          role: 'user',
-        },
-      ],
-    };
+  public async getDemoCredentials(): Promise<DemoCredentialsResponse> {
+    return ApiResponseBuilder.success(
+      {
+        credentials: [
+          {
+            email: 'admin@example.com',
+            password: 'admin123',
+            role: 'admin',
+          },
+          {
+            email: 'user@example.com',
+            password: 'password123',
+            role: 'user',
+          },
+        ],
+      },
+      'Demo credentials for testing'
+    );
   }
 }

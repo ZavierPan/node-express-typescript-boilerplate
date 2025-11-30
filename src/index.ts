@@ -23,7 +23,9 @@ if (config.nodeEnv === 'development') {
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     console.log('📚 Swagger documentation available at /api-docs');
   } catch (error) {
-    console.log('📚 Swagger spec not found. Run "npm run swagger" to generate it.');
+    console.log(
+      '📚 Swagger spec not found. Run "npm run swagger" to generate it.'
+    );
   }
 } else {
   console.log('📚 Swagger documentation disabled in production environment');
@@ -33,15 +35,17 @@ if (config.nodeEnv === 'development') {
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { RegisterRoutes } = require('./routes/routes');
-  
+
   // Create API router
   const apiRouter = express.Router();
   RegisterRoutes(apiRouter);
   app.use('/api', apiRouter);
-  
+
   console.log('🛣️  TSOA routes registered at /api');
 } catch (error) {
-  console.log('🛣️  TSOA routes not found. Run "npm run swagger" to generate them.');
+  console.log(
+    '🛣️  TSOA routes not found. Run "npm run swagger" to generate them.'
+  );
   console.log(error);
 }
 
@@ -65,7 +69,9 @@ app.listen(config.port, () => {
   console.log(`📝 Environment: ${config.nodeEnv}`);
   console.log(`🌐 URL: http://localhost:${config.port}`);
   if (config.nodeEnv === 'development') {
-    console.log(`📚 API Documentation: http://localhost:${config.port}/api-docs`);
+    console.log(
+      `📚 API Documentation: http://localhost:${config.port}/api-docs`
+    );
   }
   console.log(`❤️  Health Check: http://localhost:${config.port}/api/health`);
 });
