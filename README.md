@@ -6,6 +6,8 @@ A modern Node.js Express TypeScript backend API template project with complete a
 
 - **TypeScript** - Complete type safety support
 - **Express.js** - Fast, minimalist web framework
+- **TSOA** - Auto-generated Swagger documentation and type-safe routes
+- **Security** - Helmet and CORS protection
 - **ESLint + Prettier** - Code quality and formatting
 - **Modular Architecture** - Well-organized project structure
 - **Development Tools** - Hot reload with nodemon
@@ -37,6 +39,7 @@ The server will start at `http://localhost:3000`.
 
 - Main endpoint: `http://localhost:3000`
 - Health check: `http://localhost:3000/health`
+- **API Documentation**: `http://localhost:3000/api-docs` (development only)
 
 ## 📁 Project Structure
 
@@ -44,8 +47,14 @@ The server will start at `http://localhost:3000`.
 ├── src/
 │   ├── config/          # Configuration files
 │   │   └── index.ts     # Environment configuration
-│   ├── controllers/     # API controllers (future)
-│   ├── middleware/      # Express middleware (future)
+│   ├── controllers/     # TSOA API controllers
+│   │   └── HealthController.ts  # Health check endpoints
+│   ├── middleware/      # Express middleware
+│   │   └── errorHandler.ts     # Global error handling
+│   ├── routes/          # Auto-generated TSOA routes
+│   │   └── routes.ts    # Generated Express routes
+│   ├── swagger/         # Auto-generated Swagger documentation
+│   │   └── swagger.json # OpenAPI 3.0 specification
 │   ├── services/        # Business logic services (future)
 │   ├── types/           # TypeScript type definitions (future)
 │   ├── utils/           # Utility functions (future)
@@ -53,45 +62,52 @@ The server will start at `http://localhost:3000`.
 ├── .eslintrc.js         # ESLint configuration with comments
 ├── .prettierrc.js       # Prettier configuration with comments
 ├── tsconfig.json        # TypeScript configuration
+├── tsoa.json           # TSOA configuration
 ├── package.json         # Project dependencies and scripts
 └── README.md           # Project documentation
 ```
 
 ## 🔧 Available Scripts
 
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build production version
+- `npm run dev` - Start development server with hot reload (includes Swagger generation)
+- `npm run build` - Build production version (includes Swagger generation)
 - `npm run start` - Start production server
+- `npm run swagger` - Generate TSOA routes and Swagger documentation
 - `npm run lint` - Run ESLint code quality check
 - `npm run format` - Format code with Prettier
 - `npm run typecheck` - Run TypeScript type checking
 
 ## 📚 API Endpoints
 
-### Current Endpoints
-
+### Health Check
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/` | Main endpoint with server info |
-| GET | `/health` | Health check endpoint |
+| GET | `/api/health` | TSOA health check with detailed info |
+| GET | `/api/health/ping` | Simple ping endpoint |
+
+### API Documentation
+| Method | Endpoint | Description | Available |
+|--------|----------|-------------|-----------|
+| GET | `/api-docs` | Swagger UI documentation | Development only |
 
 ### Response Examples
 
-**GET /**
-```json
-{
-  "message": "Hello World! Node.js Express TypeScript Boilerplate is running!",
-  "timestamp": "2023-12-01T10:30:00.000Z",
-  "environment": "development"
-}
-```
-
-**GET /health**
+**GET /api/health**
 ```json
 {
   "status": "OK",
+  "timestamp": "2023-12-01T10:30:00.000Z",
   "uptime": 123.456,
-  "timestamp": "2023-12-01T10:30:00.000Z"
+  "environment": "development",
+  "version": "1.0.0"
+}
+```
+
+**GET /api/health/ping**
+```json
+{
+  "message": "pong"
 }
 ```
 
@@ -209,7 +225,8 @@ npm start
 
 This boilerplate is designed to be extended with additional features:
 
-- [ ] TSOA integration for auto-generated Swagger documentation
+- [x] TSOA integration for auto-generated Swagger documentation
+- [x] Error handling middleware
 - [ ] JWT authentication system
 - [ ] Database integration (TypeORM + MySQL)
 - [ ] CRUD API endpoints
@@ -217,7 +234,8 @@ This boilerplate is designed to be extended with additional features:
 - [ ] Deployment scripts
 - [ ] Logging system
 - [ ] Testing framework
-- [ ] Error handling middleware
+- [ ] Rate limiting
+- [ ] API versioning
 
 ## 🤝 Contributing
 
