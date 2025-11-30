@@ -1,0 +1,30 @@
+{
+  "entryFile": "src/index.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "controllerPathGlobs": ["src/controllers/**/*Controller.ts"],
+  "spec": {
+    "outputDirectory": "src/swagger",
+    "specVersion": 3,
+    "name": "Node Express TypeScript Boilerplate API",
+    "description": "A boilerplate API built with Node.js, Express, and TypeScript",
+    "version": "1.0.0",
+    "host": "localhost:3000",
+    "basePath": "/api",
+    "schemes": ["http", "https"],
+    "consumes": ["application/json"],
+    "produces": ["application/json"],
+    "securityDefinitions": {
+      "jwt": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header",
+        "description": "JWT token for authentication. Format: Bearer {token}"
+      }
+    }
+  },
+  "routes": {
+    "routesDir": "src/routes",
+    "routesFileName": "routes.ts",
+    "middleware": "express"
+  }
+}

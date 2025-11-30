@@ -1,11 +1,44 @@
 import express, { Application, Request, Response } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import swaggerUi from 'swagger-ui-express';
 import config from './config/index';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 const app: Application = express();
 
-// Basic middleware
+// Security middleware
+app.use(helmet());
+app.use(cors());
+
+// Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Swagger documentation (will be available after TSOA generates the spec)
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const swaggerDocument = require('./swagger/swagger.json');
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  console.log('📚 Swagger documentation available at /api-docs');
+} catch (error) {
+  console.log('📚 Swagger spec not found. Run "npm run swagger" to generate it.');
+}
+
+// API routes (will be available after TSOA generates routes)
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { RegisterRoutes } = require('./routes/routes');
+  
+  // Create API router
+  const apiRouter = express.Router();
+  RegisterRoutes(apiRouter);
+  app.use('/api', apiRouter);
+  
+  console.log('🛣️  TSOA routes registered at /api');
+} catch (error) {
+  console.log('🛣️  TSOA routes not found. Run "npm run swagger" to generate them.');
+}
 
 // Basic routes
 app.get('/', (req: Request, res: Response) => {
@@ -13,23 +46,21 @@ app.get('/', (req: Request, res: Response) => {
     message: 'Hello World! Node.js Express TypeScript Boilerplate is running!',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
+    version: '1.0.0',
   });
 });
 
-// Health check route
-app.get('/health', (req: Request, res: Response) => {
-  res.json({
-    status: 'OK',
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-  });
-});
+// Error handling middleware (must be last)
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 // Start server
 app.listen(config.port, () => {
   console.log(`🚀 Server is running on port ${config.port}`);
   console.log(`📝 Environment: ${config.nodeEnv}`);
   console.log(`🌐 URL: http://localhost:${config.port}`);
+  console.log(`📚 API Documentation: http://localhost:${config.port}/api-docs`);
+  console.log(`❤️  Health Check: http://localhost:${config.port}/health`);
 });
 
 export default app;
