@@ -9,14 +9,17 @@ const app: Application = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: config.cors.origin,
+  credentials: config.cors.credentials,
+}));
 
 // Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Swagger documentation (only available in development environment)
-if (config.nodeEnv === 'development') {
+// Swagger documentation (configurable via environment)
+if (config.api.swaggerEnabled) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const swaggerDocument = require('./swagger/swagger.json');
@@ -39,9 +42,9 @@ try {
   // Create API router
   const apiRouter = express.Router();
   RegisterRoutes(apiRouter);
-  app.use('/api', apiRouter);
+  app.use(config.api.prefix, apiRouter);
 
-  console.log('🛣️  TSOA routes registered at /api');
+  console.log(`🛣️  TSOA routes registered at ${config.api.prefix}`);
 } catch (error) {
   console.log(
     '🛣️  TSOA routes not found. Run "npm run swagger" to generate them.'
@@ -73,7 +76,7 @@ app.listen(config.port, () => {
       `📚 API Documentation: http://localhost:${config.port}/api-docs`
     );
   }
-  console.log(`❤️  Health Check: http://localhost:${config.port}/api/health`);
+  console.log(`❤️  Health Check: http://localhost:${config.port}${config.api.prefix}/health`);
 });
 
 export default app;

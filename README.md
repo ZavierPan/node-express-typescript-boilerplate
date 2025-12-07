@@ -50,7 +50,7 @@ The server will start at `http://localhost:3000`.
 ```
 ├── src/
 │   ├── config/          # Configuration files
-│   │   └── index.ts     # Environment configuration
+│   │   └── index.ts     # Environment configuration and dotenv loading
 │   ├── controllers/     # TSOA API controllers
 │   │   ├── AuthController.ts    # Authentication endpoints
 │   │   ├── HealthController.ts  # Health check endpoints
@@ -70,12 +70,24 @@ The server will start at `http://localhost:3000`.
 │   ├── services/        # Business logic services (future)
 │   ├── utils/           # Utility functions (future)
 │   └── index.ts         # Application entry point
+├── scripts/             # Utility scripts
+│   └── test-env.js      # Environment variable testing script
+├── .env.dev             # Development environment variables
 ├── .eslintrc.js         # ESLint configuration
 ├── .prettierrc.js       # Prettier configuration
+├── .gitignore           # Git ignore rules
 ├── tsconfig.json        # TypeScript configuration
 ├── tsoa.json           # TSOA configuration
 ├── package.json         # Project dependencies and scripts
 └── README.md           # Project documentation
+```
+
+### Environment Files (not all tracked in git)
+
+```
+├── .env.dev             # Development config (tracked)
+├── .env.production      # Production config (create manually, not tracked)
+└── .env.local          # Local overrides (not tracked, highest priority)
 ```
 
 ## 🔧 Available Scripts
@@ -178,15 +190,52 @@ All API responses follow a unified format:
 
 ## ⚙️ Configuration
 
-The application uses environment variables for configuration:
+### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NODE_ENV` | Environment mode | `development` |
-| `PORT` | Server port | `3000` |
-| `JWT_SECRET` | JWT signing secret | `your-super-secret-jwt-key` |
-| `JWT_EXPIRES_IN` | JWT token expiration | `24h` |
-| `JWT_REFRESH_EXPIRES_IN` | Refresh token expiration | `7d` |
+The application uses environment variables for configuration. Environment variables are loaded based on `NODE_ENV`:
+
+- **Development**: `.env.dev` (automatically loaded when `NODE_ENV=development`)
+- **Production**: `.env.production` (automatically loaded when `NODE_ENV=production`)
+- **Local overrides**: `.env.local` (highest priority, not tracked in git)
+
+### Environment Setup
+
+1. **Development Environment** (default):
+   ```bash
+   npm run dev  # Automatically sets NODE_ENV=development
+   ```
+
+2. **Production Environment**:
+   ```bash
+   npm run build
+   npm start    # Automatically sets NODE_ENV=production
+   ```
+
+3. **Custom Environment**:
+   ```bash
+   NODE_ENV=development npm run dev
+   ```
+
+### Available Environment Variables
+
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `PORT` | Server port | `3000` | `3000` |
+| `JWT_SECRET` | JWT signing secret | `your-super-secret-jwt-key` | `your-production-secret-key` |
+| `JWT_EXPIRES_IN` | JWT token expiration | `24h` | `1h` (dev), `24h` (prod) |
+| `JWT_REFRESH_EXPIRES_IN` | Refresh token expiration | `7d` | `24h` (dev), `7d` (prod) |
+| `CORS_ORIGIN` | Allowed CORS origins (comma-separated) | `http://localhost:3000` | `http://localhost:3000,http://localhost:3001` |
+| `CORS_CREDENTIALS` | Allow credentials in CORS | `true` | `true` |
+| `API_PREFIX` | API route prefix | `/api` | `/api` |
+| `SWAGGER_ENABLED` | Enable Swagger documentation | `false` (prod), `true` (dev) | `true` |
+
+### Environment Files
+
+- **`.env.dev`** - Development configuration (tracked in git)
+- **`.env.production`** - Production configuration (create manually, not tracked)
+- **`.env.local`** - Local overrides (not tracked in git, highest priority)
+
+**Note**: `NODE_ENV` should be set by your deployment environment or npm scripts, not in `.env` files.
 
 ## 🧪 Development
 
@@ -272,6 +321,7 @@ This boilerplate is designed to be extended with additional features:
 - [x] CRUD API endpoints with user management
 - [x] Unified API response format with builder pattern
 - [x] Modular response type definitions
+- [x] Environment variable configuration with dotenv
 - [ ] Database integration (TypeORM + MySQL)
 - [ ] Docker containerization
 - [ ] Deployment scripts (build.sh, deploy.sh)
