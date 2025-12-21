@@ -79,13 +79,13 @@ This creates:
 - Admin user: `admin@example.com` / `admin123`
 - Demo user: `user@example.com` / `password123`
 
-### 3. Test the API
+### 6. Test the API
 
 - Main endpoint: `http://localhost:3000`
-- Health check: `http://localhost:3000/health`
+- Health check: `http://localhost:3000/api/health`
 - **API Documentation**: `http://localhost:3000/api-docs` (development only)
-- **Authentication**: `http://localhost:3000/auth/login`
-- **User Management**: `http://localhost:3000/users/profile` (requires authentication)
+- **Authentication**: `http://localhost:3000/api/auth/login`
+- **User Management**: `http://localhost:3000/api/users/profile` (requires authentication)
 
 ## 📁 Project Structure
 
@@ -170,15 +170,15 @@ This creates:
 ### Authentication
 | Method | Endpoint | Description | Authentication |
 |--------|----------|-------------|----------------|
-| POST | `/auth/login` | User login with email/password | None |
-| POST | `/auth/demo-credentials` | Get demo credentials for testing | None |
+| POST | `/api/auth/login` | User login with email/password | None |
+| POST | `/api/auth/demo-credentials` | Get demo credentials for testing | None |
 
 ### User Management
 | Method | Endpoint | Description | Authentication |
 |--------|----------|-------------|----------------|
-| GET | `/users/profile` | Get current user profile | JWT Required |
-| GET | `/users/dashboard` | Get user dashboard with stats | JWT Required |
-| GET | `/users/` | Get all users (admin only) | JWT Required (Admin) |
+| GET | `/api/users/profile` | Get current user profile | JWT Required |
+| GET | `/api/users/dashboard` | Get user dashboard with stats | JWT Required |
+| GET | `/api/users/` | Get all users (admin only) | JWT Required (Admin) |
 
 ### API Documentation
 | Method | Endpoint | Description | Available |
@@ -310,20 +310,46 @@ This project uses ESLint and Prettier for code quality and formatting:
 # Check code quality
 npm run lint
 
+# Auto-fix linting issues (only fixes formatting and simple issues)
+npm run lint:fix
+
 # Format code
 npm run format
+
+# Check formatting without modifying files
+npm run format:check
 
 # Type checking
 npm run typecheck
 ```
+
+**Note**: `npm run lint:fix` can only auto-fix formatting-related issues. It cannot fix:
+- Unused variables (must be manually removed)
+- `any` type usage (must be replaced with proper types like `unknown` or specific interfaces)
+- Logic errors (must be manually corrected)
+
+### TypeScript Best Practices
+
+This project follows strict TypeScript practices:
+
+- ❌ **Never use `any`** - Use `unknown`, specific types, or generics instead
+- ✅ **Use `unknown`** for uncertain types that need runtime checking
+- ✅ **Define interfaces** for all data structures
+- ✅ **Use type guards** when working with `unknown` types
+- ✅ **Enable strict mode** in tsconfig.json
 
 ### File Structure Guidelines
 
 - **src/config/** - Configuration and environment variables
 - **src/controllers/** - API route handlers with TSOA decorators
 - **src/controllers/response/** - Response type definitions organized by feature
+- **src/entities/** - TypeORM database entities
 - **src/middleware/** - Express middleware functions (authentication, error handling)
-- **src/services/** - Business logic and external service integrations (future)
+- **src/migrations/** - Database migration files
+- **src/routes/** - Auto-generated TSOA routes
+- **src/scripts/** - Database and utility scripts
+- **src/services/** - Business logic and database operations
+- **src/swagger/** - Auto-generated Swagger documentation
 - **src/utils/** - Utility functions and helpers (future)
 
 ## 🗄️ Database Migration Workflow
