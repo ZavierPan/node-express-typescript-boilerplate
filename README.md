@@ -25,7 +25,25 @@ A modern Node.js Express TypeScript backend API template project with complete a
 
 ## 🛠️ Quick Start
 
-### 1. Install Dependencies
+Choose one of the following methods to get started:
+
+### Option 1: Docker (Recommended)
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd node-express-typescript-boilerplate
+
+# Start with Docker (includes database)
+npm run docker:compose:up:dev
+
+# The application will be available at http://localhost:3000
+# API documentation: http://localhost:3000/api-docs
+```
+
+### Option 2: Local Development
+
+#### 1. Install Dependencies
 
 ```bash
 npm install
@@ -33,7 +51,7 @@ npm install
 yarn install
 ```
 
-### 2. Setup Database
+#### 2. Setup Database
 
 Make sure you have MySQL running and create a database:
 
@@ -41,7 +59,7 @@ Make sure you have MySQL running and create a database:
 CREATE DATABASE node_express_boilerplate;
 ```
 
-### 3. Configure Environment
+#### 3. Configure Environment
 
 The application will use the database configuration from `.env.dev` by default:
 
@@ -59,7 +77,7 @@ DB_LOGGING=true
 
 Update these values according to your MySQL setup.
 
-### 4. Start Development Server
+#### 4. Start Development Server
 
 ```bash
 npm run dev
@@ -69,7 +87,7 @@ The server will start at `http://localhost:3000` and automatically:
 - Connect to the database
 - Run pending migrations to create/update tables
 
-### 5. Seed Database (Optional)
+#### 5. Seed Database (Optional)
 
 Create demo users for testing:
 
@@ -81,7 +99,7 @@ This creates:
 - Admin user: `admin@example.com` / `admin123`
 - Demo user: `user@example.com` / `password123`
 
-### 6. Test the API
+#### 6. Test the API
 
 - Main endpoint: `http://localhost:3000`
 - Health check: `http://localhost:3000/api/health`
