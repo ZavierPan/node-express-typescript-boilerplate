@@ -14,12 +14,14 @@ A modern Node.js Express TypeScript backend API template project with complete a
 - **ESLint + Prettier** - Code quality and formatting
 - **Modular Architecture** - Well-organized project structure with response types
 - **Development Tools** - Hot reload with nodemon
+- **Docker Support** - Complete containerization with multi-stage builds and health checks
 
 ## 📋 System Requirements
 
 - Node.js >= 18.0.0
 - npm or yarn
 - MySQL 5.7+ or 8.0+ (for database)
+- Docker & Docker Compose (for containerized deployment)
 
 ## 🛠️ Quick Start
 
@@ -87,6 +89,53 @@ This creates:
 - **Authentication**: `http://localhost:3000/api/auth/login`
 - **User Management**: `http://localhost:3000/api/users/profile` (requires authentication)
 
+## 🐳 Docker Deployment
+
+### Quick Start with Docker
+
+#### Development Environment
+
+```bash
+# Start development environment with hot reload
+npm run docker:compose:up:dev
+
+# Stop development environment
+npm run docker:compose:down:dev
+```
+
+#### Production Environment
+
+```bash
+# Start production environment
+npm run docker:compose:up
+
+# Stop production environment
+npm run docker:compose:down
+```
+
+### Docker Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run docker:compose:up:dev` | Start development environment with hot reload |
+| `npm run docker:compose:down:dev` | Stop development environment |
+| `npm run docker:compose:up` | Start production environment |
+| `npm run docker:compose:down` | Stop production environment |
+
+### Docker Features
+
+- **Multi-stage builds** for optimized production images
+- **Health checks** for both application and database
+- **Volume persistence** for database data and uploads
+- **Security hardening** with non-root users and read-only containers
+- **Automatic migrations** run before application start
+- **Hot reload** in development environment
+
+### Environment Files for Docker
+
+- **Development**: Uses `.env.dev` automatically
+- **Production**: Requires `.env.production` file (create manually)
+
 ## 📁 Project Structure
 
 ```
@@ -119,11 +168,18 @@ This creates:
 │   ├── utils/           # Utility functions (future)
 │   └── index.ts         # Application entry point
 ├── scripts/             # Utility scripts
+│   ├── init-db.sql      # Database initialization script
 │   └── test-env.js      # Environment variable testing script
 ├── .env.dev             # Development environment variables
+├── .env.production      # Production environment variables (create manually)
+├── .dockerignore        # Docker ignore rules
 ├── .eslintrc.js         # ESLint configuration
 ├── .prettierrc.js       # Prettier configuration
 ├── .gitignore           # Git ignore rules
+├── docker-compose.yml   # Production Docker Compose configuration
+├── docker-compose.dev.yml # Development Docker Compose configuration
+├── Dockerfile           # Production Docker image (multi-stage build)
+├── Dockerfile.dev       # Development Docker image
 ├── tsconfig.json        # TypeScript configuration
 ├── tsoa.json           # TSOA configuration
 ├── package.json         # Project dependencies and scripts
@@ -483,8 +539,7 @@ This boilerplate is designed to be extended with additional features:
 - [x] Modular response type definitions
 - [x] Environment variable configuration with dotenv
 - [x] Database integration (TypeORM + MySQL)
-- [ ] Docker containerization
-- [ ] Deployment scripts (build.sh, deploy.sh)
+- [x] Docker containerization with multi-stage builds and health checks
 - [ ] Logging system
 - [ ] Testing framework
 - [ ] Rate limiting
