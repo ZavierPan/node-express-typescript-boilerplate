@@ -4,7 +4,7 @@
   "description": "A modern Node.js Express TypeScript boilerplate with authentication, auto-generated API docs, database integration, and Docker deployment.",
   "main": "dist/index.js",
   "engines": {
-    "node": ">= 18.0.0 <21.0.0"
+    "node": ">= 18.0.0"
   },
   "scripts": {
     "dev": "NODE_ENV=development npm run swagger && nodemon",
@@ -16,7 +16,13 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:migration:generate": "NODE_ENV=development ts-node ./node_modules/typeorm/cli.js migration:generate -d src/config/database.ts",
+    "db:migration:run": "NODE_ENV=development ts-node ./node_modules/typeorm/cli.js migration:run -d src/config/database.ts",
+    "db:migration:run:prod": "NODE_ENV=production ts-node ./node_modules/typeorm/cli.js migration:run -d src/config/database.ts",
+    "db:migration:revert": "NODE_ENV=development ts-node ./node_modules/typeorm/cli.js migration:revert -d src/config/database.ts",
+    "db:seed": "NODE_ENV=development ts-node src/scripts/seed-database.ts",
+    "db:seed:prod": "NODE_ENV=production ts-node src/scripts/seed-database.ts"
   },
   "keywords": [
     "nodejs",
@@ -29,14 +35,19 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.18.2",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.15.3",
+    "reflect-metadata": "^0.2.2",
     "swagger-ui-express": "^5.0.0",
-    "tsoa": "^5.1.1"
+    "tsoa": "^5.1.1",
+    "typeorm": "^0.3.28"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

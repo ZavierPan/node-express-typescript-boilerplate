@@ -4,15 +4,22 @@ import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import config from './config/index';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import {
+  initializeDatabase,
+  closeDatabase,
+  runMigrations,
+} from './config/database';
 
 const app: Application = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors({
-  origin: config.cors.origin,
-  credentials: config.cors.credentials,
-}));
+app.use(
+  cors({
+    origin: config.cors.origin,
+    credentials: config.cors.credentials,
+  })
+);
 
 // Body parsing middleware
 app.use(express.json());
@@ -66,17 +73,49 @@ app.get('/', (req: Request, res: Response) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Start server
-app.listen(config.port, () => {
-  console.log(`🚀 Server is running on port ${config.port}`);
-  console.log(`📝 Environment: ${config.nodeEnv}`);
-  console.log(`🌐 URL: http://localhost:${config.port}`);
-  if (config.nodeEnv === 'development') {
-    console.log(
-      `📚 API Documentation: http://localhost:${config.port}/api-docs`
-    );
+// Initialize database and start server
+async function startServer() {
+  try {
+    // Initialize database connection
+    await initializeDatabase();
+
+    // Run pending migrations
+    await runMigrations();
+
+    // Start server
+    app.listen(config.port, () => {
+      console.log(`🚀 Server is running on port ${config.port}`);
+      console.log(`📝 Environment: ${config.nodeEnv}`);
+      console.log(`🌐 URL: http://localhost:${config.port}`);
+      if (config.nodeEnv === 'development') {
+        console.log(
+          `📚 API Documentation: http://localhost:${config.port}/api-docs`
+        );
+      }
+      console.log(
+        `❤️  Health Check: http://localhost:${config.port}${config.api.prefix}/health`
+      );
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
   }
-  console.log(`❤️  Health Check: http://localhost:${config.port}${config.api.prefix}/health`);
+}
+
+// Handle graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('🛑 SIGTERM received, shutting down gracefully...');
+  await closeDatabase();
+  process.exit(0);
 });
+
+process.on('SIGINT', async () => {
+  console.log('🛑 SIGINT received, shutting down gracefully...');
+  await closeDatabase();
+  process.exit(0);
+});
+
+// Start the application
+startServer();
 
 export default app;

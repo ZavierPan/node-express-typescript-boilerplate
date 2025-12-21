@@ -8,6 +8,7 @@ A modern Node.js Express TypeScript backend API template project with complete a
 - **Express.js** - Fast, minimalist web framework
 - **TSOA** - Auto-generated Swagger documentation and type-safe routes
 - **JWT Authentication** - Complete authentication system with role-based access control
+- **Database Integration** - TypeORM with MySQL support and automatic migrations
 - **Unified API Response** - Consistent response format across all endpoints
 - **Security** - Helmet and CORS protection
 - **ESLint + Prettier** - Code quality and formatting
@@ -18,6 +19,7 @@ A modern Node.js Express TypeScript backend API template project with complete a
 
 - Node.js >= 18.0.0
 - npm or yarn
+- MySQL 5.7+ or 8.0+ (for database)
 
 ## 🛠️ Quick Start
 
@@ -29,13 +31,53 @@ npm install
 yarn install
 ```
 
-### 2. Start Development Server
+### 2. Setup Database
+
+Make sure you have MySQL running and create a database:
+
+```sql
+CREATE DATABASE node_express_boilerplate;
+```
+
+### 3. Configure Environment
+
+The application will use the database configuration from `.env.dev` by default:
+
+```bash
+# Database Configuration (Development - MySQL)
+DB_TYPE=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=password
+DB_DATABASE=node_express_boilerplate
+DB_SYNCHRONIZE=false
+DB_LOGGING=true
+```
+
+Update these values according to your MySQL setup.
+
+### 4. Start Development Server
 
 ```bash
 npm run dev
 ```
 
-The server will start at `http://localhost:3000`.
+The server will start at `http://localhost:3000` and automatically:
+- Connect to the database
+- Run pending migrations to create/update tables
+
+### 5. Seed Database (Optional)
+
+Create demo users for testing:
+
+```bash
+npm run db:seed
+```
+
+This creates:
+- Admin user: `admin@example.com` / `admin123`
+- Demo user: `user@example.com` / `password123`
 
 ### 3. Test the API
 
@@ -50,7 +92,8 @@ The server will start at `http://localhost:3000`.
 ```
 ├── src/
 │   ├── config/          # Configuration files
-│   │   └── index.ts     # Environment configuration and dotenv loading
+│   │   ├── index.ts     # Environment configuration and dotenv loading
+│   │   └── database.ts  # TypeORM database configuration
 │   ├── controllers/     # TSOA API controllers
 │   │   ├── AuthController.ts    # Authentication endpoints
 │   │   ├── HealthController.ts  # Health check endpoints
@@ -60,14 +103,19 @@ The server will start at `http://localhost:3000`.
 │   │       ├── common.res.ts    # Common response types and builder
 │   │       ├── user.res.ts      # User response types
 │   │       └── index.ts         # Unified export
+│   ├── entities/        # TypeORM database entities
+│   │   └── User.ts      # User entity model
 │   ├── middleware/      # Express middleware
 │   │   ├── authentication.ts   # JWT authentication middleware
 │   │   └── errorHandler.ts     # Global error handling
 │   ├── routes/          # Auto-generated TSOA routes
 │   │   └── routes.ts    # Generated Express routes
+│   ├── scripts/         # Database and utility scripts
+│   │   └── seed-database.ts    # Database seeding script
+│   ├── services/        # Business logic services
+│   │   └── UserService.ts      # User database operations
 │   ├── swagger/         # Auto-generated Swagger documentation
 │   │   └── swagger.json # OpenAPI 3.0 specification
-│   ├── services/        # Business logic services (future)
 │   ├── utils/           # Utility functions (future)
 │   └── index.ts         # Application entry point
 ├── scripts/             # Utility scripts
@@ -102,6 +150,13 @@ The server will start at `http://localhost:3000`.
 - `npm run format` - Format code with Prettier
 - `npm run format:check` - Check code formatting with Prettier
 - `npm run typecheck` - Run TypeScript type checking
+- `npm run db:migration:generate` - Auto-generate migration from entity changes (compares entities with database)
+- `npm run db:migration:create` - Create empty migration file
+- `npm run db:migration:run` - Run pending migrations (development)
+- `npm run db:migration:run:prod` - Run pending migrations (production)
+- `npm run db:migration:revert` - Revert last migration (development)
+- `npm run db:seed` - Seed database with demo users (development)
+- `npm run db:seed:prod` - Seed database with demo users (production)
 
 ## 📚 API Endpoints
 
@@ -150,14 +205,14 @@ For testing purposes, use these demo credentials:
 
 1. **Login** to get JWT token:
 ```bash
-curl -X POST http://localhost:3000/auth/login \
+curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "user@example.com", "password": "password123"}'
 ```
 
 2. **Use token** in subsequent requests:
 ```bash
-curl -X GET http://localhost:3000/users/profile \
+curl -X GET http://localhost:3000/api/users/profile \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -228,6 +283,14 @@ The application uses environment variables for configuration. Environment variab
 | `CORS_CREDENTIALS` | Allow credentials in CORS | `true` | `true` |
 | `API_PREFIX` | API route prefix | `/api` | `/api` |
 | `SWAGGER_ENABLED` | Enable Swagger documentation | `false` (prod), `true` (dev) | `true` |
+| `DB_TYPE` | Database type | `mysql` | `mysql` |
+| `DB_HOST` | Database host | `localhost` | `localhost` |
+| `DB_PORT` | Database port | `3306` | `3306` |
+| `DB_USERNAME` | Database username | `root` | `root` |
+| `DB_PASSWORD` | Database password | `password` | `your-db-password` |
+| `DB_DATABASE` | Database name | `node_express_boilerplate` | `your-database-name` |
+| `DB_SYNCHRONIZE` | Auto-sync database schema | `false` (all environments) | `false` |
+| `DB_LOGGING` | Enable database query logging | `false` (prod), `true` (dev) | `true` |
 
 ### Environment Files
 
@@ -262,6 +325,77 @@ npm run typecheck
 - **src/middleware/** - Express middleware functions (authentication, error handling)
 - **src/services/** - Business logic and external service integrations (future)
 - **src/utils/** - Utility functions and helpers (future)
+
+## 🗄️ Database Migration Workflow
+
+### Auto-Generate Migration
+
+TypeORM can automatically compare your entities with the database structure and generate the required migration files:
+
+```bash
+# Auto-generate migration with specified name (recommended)
+npm run db:migration:generate src/migrations/AddUserPhoneField
+
+# This will automatically:
+# 1. Scan all entities in the src/entities/ folder
+# 2. Compare with current database structure
+# 3. Generate migration file with the differences
+# 4. File will be named src/migrations/AddUserPhoneField-{timestamp}.ts
+```
+
+### Migration Workflow
+
+1. **Modify Entity**:
+   ```typescript
+   // For example, add a field in src/entities/User.ts
+   @Column({ nullable: true })
+   phone?: string;
+   ```
+
+2. **Generate Migration**:
+   ```bash
+   npm run db:migration:generate src/migrations/AddPhoneField
+   ```
+
+3. **Review Generated Migration**:
+   ```typescript
+   // Check src/migrations/AutoGenerated-{timestamp}.ts
+   // Verify SQL statements are correct
+   ```
+
+4. **Run Migration**:
+   ```bash
+   npm run db:migration:run
+   ```
+
+### Manual Migration Creation
+
+If you need to manually create an empty migration file:
+
+```bash
+# Create empty migration file
+npm run db:migration:create src/migrations/AddCustomLogic
+```
+
+### Migration Management
+
+```bash
+# Run all pending migrations
+npm run db:migration:run
+
+# Revert the last migration
+npm run db:migration:revert
+
+# Run migrations in production environment
+npm run db:migration:run:prod
+```
+
+### Important Notes
+
+- **DB_SYNCHRONIZE set to false**: All environments use migrations instead of auto-sync
+- **Test before deployment**: Test migrations in development environment before deploying to production
+- **Backup database**: Always backup database before running migrations in production
+- **Review SQL**: Check generated SQL statements before execution
 
 ## 🔄 Development Workflow
 
@@ -322,7 +456,7 @@ This boilerplate is designed to be extended with additional features:
 - [x] Unified API response format with builder pattern
 - [x] Modular response type definitions
 - [x] Environment variable configuration with dotenv
-- [ ] Database integration (TypeORM + MySQL)
+- [x] Database integration (TypeORM + MySQL)
 - [ ] Docker containerization
 - [ ] Deployment scripts (build.sh, deploy.sh)
 - [ ] Logging system

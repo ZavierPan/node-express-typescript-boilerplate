@@ -1,5 +1,4 @@
 import { Controller, Post, Body, Route, Tags, Example, Response } from 'tsoa';
-import bcrypt from 'bcryptjs';
 import {
   generateToken,
   generateRefreshToken,
@@ -16,6 +15,7 @@ import {
   DemoCredentialsData,
   DemoCredentialsResponse,
 } from './response/auth.res';
+import { UserService } from '../services/UserService';
 
 /**
  * Authentication controller
@@ -24,6 +24,12 @@ import {
 @Route('auth')
 @Tags('Authentication')
 export class AuthController extends Controller {
+  private userService: UserService;
+
+  constructor() {
+    super();
+    this.userService = new UserService();
+  }
   /**
    * User login endpoint
    * @summary Authenticate user and return JWT token
@@ -49,57 +55,53 @@ export class AuthController extends Controller {
       return ApiResponseBuilder.badRequest('Email and password are required');
     }
 
-    // TODO: Replace with actual database lookup
-    // For now, we'll use mock data for demonstration
-    const mockUsers = [
-      {
-        id: '1',
-        email: 'admin@example.com',
-        password: await bcrypt.hash('admin123', 10), // hashed password
-        role: 'admin',
-      },
-      {
-        id: '2',
-        email: 'user@example.com',
-        password: await bcrypt.hash('password123', 10), // hashed password
-        role: 'user',
-      },
-    ];
+    try {
+      // Find user by email (including password for authentication)
+      const user = await this.userService.findByEmailWithPassword(email);
+      if (!user) {
+        return ApiResponseBuilder.unauthorized('Invalid email or password');
+      }
 
-    // Find user by email
-    const user = mockUsers.find((u) => u.email === email);
-    if (!user) {
-      return ApiResponseBuilder.unauthorized('Invalid email or password');
-    }
+      // Check if user is active
+      if (!user.isActive) {
+        return ApiResponseBuilder.unauthorized('Account is deactivated');
+      }
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return ApiResponseBuilder.unauthorized('Invalid email or password');
-    }
+      // Verify password
+      const isPasswordValid = await user.comparePassword(password);
+      if (!isPasswordValid) {
+        return ApiResponseBuilder.unauthorized('Invalid email or password');
+      }
 
-    // Generate tokens
-    const token = generateToken({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-    });
+      // Update last login timestamp
+      await this.userService.updateLastLogin(user.id);
 
-    const refreshToken = generateRefreshToken(user.id);
+      // Generate tokens
+      const token = generateToken({
+        id: user.id.toString(),
+        email: user.email,
+        role: user.role,
+      });
 
-    // Return success response
-    return ApiResponseBuilder.success(
-      {
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
+      const refreshToken = generateRefreshToken(user.id.toString());
+
+      // Return success response
+      return ApiResponseBuilder.success(
+        {
+          user: {
+            id: user.id.toString(),
+            email: user.email,
+            role: user.role,
+          },
+          token,
+          refreshToken,
         },
-        token,
-        refreshToken,
-      },
-      'Login successful'
-    );
+        'Login successful'
+      );
+    } catch (error) {
+      console.error('Login error:', error);
+      return ApiResponseBuilder.internalError('An error occurred during login');
+    }
   }
 
   /**

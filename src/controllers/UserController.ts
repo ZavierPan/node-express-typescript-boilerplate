@@ -22,6 +22,7 @@ import {
   GetDashboardApiResponse,
   GetUsersApiResponse,
 } from './response/user.res';
+import { UserService } from '../services/UserService';
 
 /**
  * User controller
@@ -30,6 +31,12 @@ import {
 @Route('users')
 @Tags('Users')
 export class UserController extends Controller {
+  private userService: UserService;
+
+  constructor() {
+    super();
+    this.userService = new UserService();
+  }
   /**
    * Get current user profile
    * @summary Get authenticated user's profile information
@@ -49,17 +56,23 @@ export class UserController extends Controller {
         return ApiResponseBuilder.unauthorized('User not authenticated');
       }
 
-      // Mock user profile data
+      // Get user from database
+      const dbUser = await this.userService.findById(parseInt(user.id));
+      if (!dbUser) {
+        return ApiResponseBuilder.notFound('User not found');
+      }
+
+      // Build user profile data
       const userProfile: UserProfile = {
-        id: user.id,
-        username: user.email.split('@')[0],
-        email: user.email,
-        role: user.role,
-        createdAt: '2024-01-01T00:00:00Z',
-        lastLoginAt: new Date().toISOString(),
+        id: dbUser.id.toString(),
+        username: dbUser.name,
+        email: dbUser.email,
+        role: dbUser.role,
+        createdAt: dbUser.createdAt.toISOString(),
+        lastLoginAt: dbUser.lastLoginAt?.toISOString(),
         profile: {
-          firstName: 'John',
-          lastName: 'Doe',
+          firstName: dbUser.name.split(' ')[0] || dbUser.name,
+          lastName: dbUser.name.split(' ').slice(1).join(' ') || '',
           avatar: 'https://via.placeholder.com/150',
           bio: 'Software developer passionate about creating amazing applications.',
           phone: '+1234567890',
@@ -76,6 +89,7 @@ export class UserController extends Controller {
         'Profile retrieved successfully'
       );
     } catch (error) {
+      console.error('Get profile error:', error);
       return ApiResponseBuilder.internalError('Failed to retrieve profile');
     }
   }
@@ -99,33 +113,47 @@ export class UserController extends Controller {
         return ApiResponseBuilder.unauthorized('User not authenticated');
       }
 
-      // Mock dashboard data
+      // Get user from database
+      const dbUser = await this.userService.findById(parseInt(user.id));
+      if (!dbUser) {
+        return ApiResponseBuilder.notFound('User not found');
+      }
+
+      // Calculate account age in days
+      const accountAge = Math.floor(
+        (new Date().getTime() - dbUser.createdAt.getTime()) /
+          (1000 * 60 * 60 * 24)
+      );
+
+      // Build dashboard data
       const dashboard: UserDashboard = {
         user: {
-          id: user.id,
-          username: user.email.split('@')[0],
-          email: user.email,
-          role: user.role,
-          createdAt: '2024-01-01T00:00:00Z',
-          lastLoginAt: new Date().toISOString(),
+          id: dbUser.id.toString(),
+          username: dbUser.name,
+          email: dbUser.email,
+          role: dbUser.role,
+          createdAt: dbUser.createdAt.toISOString(),
+          lastLoginAt: dbUser.lastLoginAt?.toISOString(),
         },
         stats: {
-          loginCount: 42,
-          lastLoginAt: new Date().toISOString(),
-          accountAge: 365,
+          loginCount: 42, // TODO: Implement login count tracking
+          lastLoginAt:
+            dbUser.lastLoginAt?.toISOString() || new Date().toISOString(),
+          accountAge,
         },
         recentActivity: [
           {
             id: '1',
             type: 'login',
             description: 'User logged in',
-            timestamp: new Date().toISOString(),
+            timestamp:
+              dbUser.lastLoginAt?.toISOString() || new Date().toISOString(),
           },
           {
             id: '2',
-            type: 'profile_update',
-            description: 'Profile information updated',
-            timestamp: new Date(Date.now() - 3600000).toISOString(),
+            type: 'account_created',
+            description: 'Account created',
+            timestamp: dbUser.createdAt.toISOString(),
           },
         ],
         notifications: [
@@ -135,7 +163,7 @@ export class UserController extends Controller {
             message: 'Welcome to the application!',
             type: 'info',
             read: false,
-            createdAt: new Date().toISOString(),
+            createdAt: dbUser.createdAt.toISOString(),
           },
         ],
       };
@@ -145,6 +173,7 @@ export class UserController extends Controller {
         'Dashboard data retrieved successfully'
       );
     } catch (error) {
+      console.error('Get dashboard error:', error);
       return ApiResponseBuilder.internalError(
         'Failed to retrieve dashboard data'
       );
@@ -172,55 +201,41 @@ export class UserController extends Controller {
       const user = (request as any).user;
 
       if (!user) {
-        // this.setStatus(HttpStatusCode.UNAUTHORIZED);
         return ApiResponseBuilder.unauthorized('User not authenticated');
       }
 
       if (user.role !== 'admin') {
-        // this.setStatus(HttpStatusCode.FORBIDDEN);
         return ApiResponseBuilder.forbidden('Admin access required');
       }
 
-      // Mock users data
-      const mockUsers: UserListItem[] = [
-        {
-          id: '1',
-          username: 'admin',
-          email: 'admin@example.com',
-          role: 'admin',
-          status: 'active',
-          createdAt: '2024-01-01T00:00:00Z',
-          lastLoginAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          username: 'user',
-          email: 'user@example.com',
-          role: 'user',
-          status: 'active',
-          createdAt: '2024-01-02T00:00:00Z',
-          lastLoginAt: new Date(Date.now() - 3600000).toISOString(),
-        },
-      ];
+      // Get users from database with pagination
+      const result = await this.userService.findAll(page, limit);
 
-      // Simple pagination
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedUsers = mockUsers.slice(startIndex, endIndex);
+      // Transform users to UserListItem format
+      const userList: UserListItem[] = result.users.map((dbUser) => ({
+        id: dbUser.id.toString(),
+        username: dbUser.name,
+        email: dbUser.email,
+        role: dbUser.role,
+        status: dbUser.isActive ? 'active' : 'inactive',
+        createdAt: dbUser.createdAt.toISOString(),
+        lastLoginAt: dbUser.lastLoginAt?.toISOString(),
+      }));
 
       const paginationInfo = {
-        page,
+        page: result.page,
         limit,
-        total: mockUsers.length,
-        totalPages: Math.ceil(mockUsers.length / limit),
+        total: result.total,
+        totalPages: result.totalPages,
       };
 
       return ApiResponseBuilder.paginatedSuccess(
-        paginatedUsers,
+        userList,
         paginationInfo,
         'Users retrieved successfully'
       );
     } catch (error) {
+      console.error('Get users error:', error);
       return ApiResponseBuilder.internalError('Failed to retrieve users');
     }
   }
