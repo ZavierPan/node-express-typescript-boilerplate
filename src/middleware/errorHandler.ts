@@ -8,9 +8,16 @@ interface ErrorResponse {
   error: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
   timestamp: string;
+}
+
+/**
+ * Custom error type for validation errors
+ */
+interface ValidationError extends Error {
+  fields?: Record<string, unknown>;
 }
 
 /**
@@ -20,46 +27,49 @@ export function errorHandler(
   err: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): Response | void {
   // Handle TSOA validation errors
   if (err.name === 'ValidateError') {
     console.warn(
       `Caught Validation Error for ${req.path}:`,
-      (err as any).fields
+      (err as ValidationError).fields
     );
     const errorResponse: ErrorResponse = {
       success: false,
       error: {
         code: 'VALIDATION_ERROR',
         message: 'Validation Failed',
-        details: (err as any)?.fields,
+        details: (err as ValidationError).fields,
       },
       timestamp: new Date().toISOString(),
     };
     return res.status(422).json(errorResponse);
   }
 
-  // Handle authentication errors (from TSOA expressAuthentication)
-  if (err.name === 'AuthError' && (err as any).statusCode) {
+  // Handle authentication errors
+  if (err.name === 'AuthError') {
     const errorResponse: ErrorResponse = {
       success: false,
       error: {
         code: 'AUTHENTICATION_ERROR',
-        message: err.message,
+        message: err.message || 'Authentication failed',
       },
       timestamp: new Date().toISOString(),
     };
-    return res.status((err as any).statusCode).json(errorResponse);
+    return res
+      .status((err as unknown as { statusCode: number }).statusCode || 401)
+      .json(errorResponse);
   }
 
-  // Handle unknown errors
-  console.error('Unknown error:', err);
+  // Default error handler
+  console.error('Unhandled error:', err);
   const errorResponse: ErrorResponse = {
     success: false,
     error: {
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Internal Server Error',
+      code: 'INTERNAL_ERROR',
+      message: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     },
     timestamp: new Date().toISOString(),
   };

@@ -1,8 +1,4 @@
-import {
-  BaseSuccessResponse,
-  BaseFailureResponse,
-  ApiResponse,
-} from './common.res';
+import { BaseSuccessResponse, ApiResponse } from './common.res';
 
 /**
  * Authentication related response type definitions

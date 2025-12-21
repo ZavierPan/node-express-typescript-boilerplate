@@ -14,7 +14,7 @@ export enum HttpStatusCode {
 }
 
 /** Base success response interface */
-export interface BaseSuccessResponse<T = any> {
+export interface BaseSuccessResponse<T = unknown> {
   success: true;
   data: T;
   message?: string;
@@ -27,13 +27,15 @@ export interface BaseFailureResponse {
   error: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
   timestamp: string;
 }
 
 /** Unified API response type */
-export type ApiResponse<T = any> = BaseSuccessResponse<T> | BaseFailureResponse;
+export type ApiResponse<T = unknown> =
+  | BaseSuccessResponse<T>
+  | BaseFailureResponse;
 
 /** Pagination info interface */
 export interface PaginationInfo {
@@ -71,7 +73,7 @@ export class ApiResponseBuilder {
   static failure(
     code: string,
     message: string,
-    details?: any
+    details?: unknown
   ): BaseFailureResponse {
     return {
       success: false,
@@ -98,7 +100,7 @@ export class ApiResponseBuilder {
   /** Common error response - Bad Request */
   static badRequest(
     message: string = 'Bad Request',
-    details?: any
+    details?: unknown
   ): BaseFailureResponse {
     return this.failure('BAD_REQUEST', message, details);
   }
@@ -121,7 +123,7 @@ export class ApiResponseBuilder {
   /** Common error response - Internal Server Error */
   static internalError(
     message: string = 'Internal Server Error',
-    details?: any
+    details?: unknown
   ): BaseFailureResponse {
     return this.failure('INTERNAL_SERVER_ERROR', message, details);
   }

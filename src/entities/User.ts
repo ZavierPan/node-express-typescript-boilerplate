@@ -62,8 +62,9 @@ export class User {
   @BeforeUpdate()
   async hashPasswordBeforeUpdate(): Promise<void> {
     // Only hash if password is being updated and it's not already hashed
-    if (this.password && !this.password.startsWith('$2b$')) {
-      this.password = await bcrypt.hash(this.password, 12);
+    const hashedPassword = this.password;
+    if (hashedPassword && !hashedPassword.startsWith('$2b$')) {
+      this.password = await bcrypt.hash(hashedPassword, 12);
     }
   }
 
@@ -93,6 +94,7 @@ export class User {
     | 'updateLastLogin'
     | 'toSafeObject'
   > {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...safeUser } = this;
     return safeUser;
   }

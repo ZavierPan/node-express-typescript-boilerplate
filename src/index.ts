@@ -32,6 +32,7 @@ if (config.api.swaggerEnabled) {
     const swaggerDocument = require('./swagger/swagger.json');
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     console.log('📚 Swagger documentation available at /api-docs');
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     console.log(
       '📚 Swagger spec not found. Run "npm run swagger" to generate it.'

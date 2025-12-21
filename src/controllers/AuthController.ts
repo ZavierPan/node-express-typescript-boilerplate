@@ -3,16 +3,10 @@ import {
   generateToken,
   generateRefreshToken,
 } from '../middleware/authentication';
-import {
-  ApiResponseBuilder,
-  HttpStatusCode,
-  BaseFailureResponse,
-} from './response/common.res';
+import { ApiResponseBuilder, BaseFailureResponse } from './response/common.res';
 import {
   LoginRequest,
-  LoginData,
   LoginResponse,
-  DemoCredentialsData,
   DemoCredentialsResponse,
 } from './response/auth.res';
 import { UserService } from '../services/UserService';

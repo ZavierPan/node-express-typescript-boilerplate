@@ -9,11 +9,7 @@ import {
   Response,
 } from 'tsoa';
 import { Request as ExpressRequest } from 'express';
-import {
-  ApiResponseBuilder,
-  HttpStatusCode,
-  BaseFailureResponse,
-} from './response/common.res';
+import { ApiResponseBuilder, BaseFailureResponse } from './response/common.res';
 import {
   UserProfile,
   UserDashboard,
@@ -23,6 +19,7 @@ import {
   GetUsersApiResponse,
 } from './response/user.res';
 import { UserService } from '../services/UserService';
+import { AuthenticatedRequest } from '../middleware/authentication';
 
 /**
  * User controller
@@ -50,7 +47,7 @@ export class UserController extends Controller {
     @Request() request: ExpressRequest
   ): Promise<GetProfileApiResponse> {
     try {
-      const user = (request as any).user;
+      const user = (request as AuthenticatedRequest).user;
 
       if (!user) {
         return ApiResponseBuilder.unauthorized('User not authenticated');
@@ -107,7 +104,7 @@ export class UserController extends Controller {
     @Request() request: ExpressRequest
   ): Promise<GetDashboardApiResponse> {
     try {
-      const user = (request as any).user;
+      const user = (request as AuthenticatedRequest).user;
 
       if (!user) {
         return ApiResponseBuilder.unauthorized('User not authenticated');
@@ -193,12 +190,13 @@ export class UserController extends Controller {
   @Response<BaseFailureResponse>(403, 'Forbidden - Admin access required')
   @Response<BaseFailureResponse>(500, 'Internal server error')
   public async getUsers(
-    @Query() page: number = 1,
-    @Query() limit: number = 10,
-    @Request() request: ExpressRequest
+    @Query() page?: number,
+    @Query() limit?: number,
+    @Query() role?: string,
+    @Request() request?: ExpressRequest
   ): Promise<GetUsersApiResponse> {
     try {
-      const user = (request as any).user;
+      const user = (request as AuthenticatedRequest)?.user;
 
       if (!user) {
         return ApiResponseBuilder.unauthorized('User not authenticated');
@@ -224,7 +222,7 @@ export class UserController extends Controller {
 
       const paginationInfo = {
         page: result.page,
-        limit,
+        limit: limit || 10,
         total: result.total,
         totalPages: result.totalPages,
       };

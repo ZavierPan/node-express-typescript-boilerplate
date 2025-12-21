@@ -1,4 +1,4 @@
-import { Request } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import config from '../config';
 
@@ -121,7 +121,7 @@ export async function expressAuthentication(
  * Can be used for non-TSOA routes
  */
 export function authMiddleware() {
-  return async (req: Request, res: any, next: any) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = await expressAuthentication(req, 'jwt');
       (req as AuthenticatedRequest).user = user;

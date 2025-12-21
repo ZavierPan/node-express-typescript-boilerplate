@@ -1,8 +1,4 @@
-import {
-  BaseSuccessResponse,
-  PaginatedResponse,
-  ApiResponse,
-} from './common.res';
+import { PaginatedResponse, ApiResponse } from './common.res';
 
 /**
  * User related response type definitions
