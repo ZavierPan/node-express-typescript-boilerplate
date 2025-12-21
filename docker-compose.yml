@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # Node.js Application (Production)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: node-express-boilerplate-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    # Load environment variables from file
+    env_file:
+      - ./.env.production
+    environment:
+      # Override NODE_ENV to ensure it's production
+      - NODE_ENV=production
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
+    volumes:
+      # Only mount uploads directory (no source code)
+      - uploads:/app/uploads
+    # Run migrations before starting the app
+    command: sh -c "npm run db:migration:run:prod && node dist/index.js"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.npm
+
+  # MySQL Database (Production)
+  mysql:
+    image: mysql:8.0
+    container_name: node-express-boilerplate-mysql
+    restart: unless-stopped
+    env_file:
+      - ./.env.production
+    ports:
+      # Only expose on localhost in production, or remove this line entirely
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Optional: Add init script if needed
+      # - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+      start_period: 40s
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  uploads:
+    driver: local

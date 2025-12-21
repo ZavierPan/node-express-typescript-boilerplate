@@ -1,0 +1,53 @@
+# Development Dockerfile with hot reload support
+
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including devDependencies for development)
+RUN npm ci
+
+# Copy TypeScript configuration files
+COPY tsconfig.json ./
+COPY tsoa.json ./
+
+# Copy source code
+COPY src ./src
+
+# Accept build arguments from docker-compose
+ARG NODE_ENV=development
+ARG SWAGGER_ENABLED=true
+
+# Set environment variables for build
+ENV NODE_ENV=${NODE_ENV}
+ENV SWAGGER_ENABLED=${SWAGGER_ENABLED}
+
+# Generate TSOA routes and Swagger documentation at build time
+RUN npm run swagger
+
+# Note: In development, swagger will be regenerated on container start
+# to ensure it's always up-to-date with mounted source code
+
+# Change ownership of the app directory to nodejs user
+RUN chown -R nodejs:nodejs /app
+
+# Switch to non-root user
+USER nodejs
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/api/health/ping', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Default command (will be overridden by docker-compose)
+CMD ["npm", "run", "dev"]

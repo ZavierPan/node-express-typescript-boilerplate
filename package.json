@@ -19,10 +19,14 @@
     "typecheck": "tsc --noEmit",
     "db:migration:generate": "NODE_ENV=development ts-node ./node_modules/typeorm/cli.js migration:generate -d src/config/database.ts",
     "db:migration:run": "NODE_ENV=development ts-node ./node_modules/typeorm/cli.js migration:run -d src/config/database.ts",
-    "db:migration:run:prod": "NODE_ENV=production ts-node ./node_modules/typeorm/cli.js migration:run -d src/config/database.ts",
+    "db:migration:run:prod": "NODE_ENV=production node ./node_modules/typeorm/cli.js migration:run -d dist/config/database.js",
     "db:migration:revert": "NODE_ENV=development ts-node ./node_modules/typeorm/cli.js migration:revert -d src/config/database.ts",
+    "db:migration:revert:prod": "NODE_ENV=production node ./node_modules/typeorm/cli.js migration:revert -d dist/config/database.js",
     "db:seed": "NODE_ENV=development ts-node src/scripts/seed-database.ts",
-    "db:seed:prod": "NODE_ENV=production ts-node src/scripts/seed-database.ts"
+    "docker:compose:up": "docker-compose -f docker-compose.yml up -d",
+    "docker:compose:up:dev": "docker-compose -f docker-compose.dev.yml up -d",
+    "docker:compose:down": "docker-compose -f docker-compose.yml down",
+    "docker:compose:down:dev": "docker-compose -f docker-compose.dev.yml down"
   },
   "keywords": [
     "nodejs",

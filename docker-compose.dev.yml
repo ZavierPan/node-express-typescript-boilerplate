@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Node.js Application (Development)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_ENV: development
+        SWAGGER_ENABLED: "true"
+    container_name: node-express-boilerplate-app-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    # Load environment variables from file
+    env_file:
+      - ./.env.dev
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
+    volumes:
+      # Mount source code for hot reload (read-write for swagger/routes generation)
+      - ./src:/app/src
+      # Mount config files as read-only
+      - ./package.json:/app/package.json:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./tsoa.json:/app/tsoa.json:ro
+      # Uploads directory
+      - uploads:/app/uploads
+    # Run migrations before starting the dev server
+    command: sh -c "npm run swagger && npm run db:migration:run && npm run dev"
+
+  # MySQL Database (same as production)
+  mysql:
+    image: mysql:8.0
+    container_name: node-express-boilerplate-mysql-dev
+    restart: unless-stopped
+    env_file:
+      - ./.env.dev
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data_dev:/var/lib/mysql
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-password}"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+      start_period: 40s
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data_dev:
+    driver: local
+  uploads:
+    driver: local
