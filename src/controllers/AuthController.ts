@@ -3,6 +3,7 @@ import {
   generateToken,
   generateRefreshToken,
 } from '../middleware/authentication';
+import Logger from '../utils/logger';
 import { ApiResponseBuilder, BaseFailureResponse } from './response/common.res';
 import {
   LoginRequest,
@@ -53,22 +54,37 @@ export class AuthController extends Controller {
       // Find user by email (including password for authentication)
       const user = await this.userService.findByEmailWithPassword(email);
       if (!user) {
+        Logger.security('Login failed - user not found', { email });
         return ApiResponseBuilder.unauthorized('Invalid email or password');
       }
 
       // Check if user is active
       if (!user.isActive) {
+        Logger.security('Login failed - account deactivated', {
+          email,
+          userId: user.id,
+        });
         return ApiResponseBuilder.unauthorized('Account is deactivated');
       }
 
       // Verify password
       const isPasswordValid = await user.comparePassword(password);
       if (!isPasswordValid) {
+        Logger.security('Login failed - invalid password', {
+          email,
+          userId: user.id,
+        });
         return ApiResponseBuilder.unauthorized('Invalid email or password');
       }
 
       // Update last login timestamp
       await this.userService.updateLastLogin(user.id);
+
+      // Log successful login
+      Logger.auth('login_success', user.id.toString(), {
+        email: user.email,
+        role: user.role,
+      });
 
       // Generate tokens
       const token = generateToken({
@@ -93,7 +109,7 @@ export class AuthController extends Controller {
         'Login successful'
       );
     } catch (error) {
-      console.error('Login error:', error);
+      Logger.error('Login error', { error, email });
       return ApiResponseBuilder.internalError('An error occurred during login');
     }
   }

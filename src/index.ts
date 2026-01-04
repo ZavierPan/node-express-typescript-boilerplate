@@ -3,7 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import config from './config/index';
+import Logger from './utils/logger';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { httpLoggingMiddleware } from './middleware/logging';
 import {
   initializeDatabase,
   closeDatabase,
@@ -25,21 +27,24 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// HTTP logging middleware (should be early in the middleware chain)
+app.use(httpLoggingMiddleware);
+
 // Swagger documentation (configurable via environment)
 if (config.api.swaggerEnabled) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const swaggerDocument = require('./swagger/swagger.json');
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-    console.log('📚 Swagger documentation available at /api-docs');
+    Logger.startup('Swagger documentation available at /api-docs');
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
-    console.log(
-      '📚 Swagger spec not found. Run "npm run swagger" to generate it.'
+    Logger.warn(
+      'Swagger spec not found. Run "npm run swagger" to generate it.'
     );
   }
 } else {
-  console.log('📚 Swagger documentation disabled in production environment');
+  Logger.startup('Swagger documentation disabled in production environment');
 }
 
 // API routes (will be available after TSOA generates routes)
@@ -52,12 +57,10 @@ try {
   RegisterRoutes(apiRouter);
   app.use(config.api.prefix, apiRouter);
 
-  console.log(`🛣️  TSOA routes registered at ${config.api.prefix}`);
+  Logger.startup(`TSOA routes registered at ${config.api.prefix}`);
 } catch (error) {
-  console.log(
-    '🛣️  TSOA routes not found. Run "npm run swagger" to generate them.'
-  );
-  console.log(error);
+  Logger.warn('TSOA routes not found. Run "npm run swagger" to generate them.');
+  Logger.debug('TSOA routes error details', { error });
 }
 
 // Basic routes
@@ -85,33 +88,33 @@ async function startServer() {
 
     // Start server
     app.listen(config.port, () => {
-      console.log(`🚀 Server is running on port ${config.port}`);
-      console.log(`📝 Environment: ${config.nodeEnv}`);
-      console.log(`🌐 URL: http://localhost:${config.port}`);
+      Logger.startup(`Server is running on port ${config.port}`);
+      Logger.startup(`Environment: ${config.nodeEnv}`);
+      Logger.startup(`URL: http://localhost:${config.port}`);
       if (config.nodeEnv === 'development') {
-        console.log(
-          `📚 API Documentation: http://localhost:${config.port}/api-docs`
+        Logger.startup(
+          `API Documentation: http://localhost:${config.port}/api-docs`
         );
       }
-      console.log(
-        `❤️  Health Check: http://localhost:${config.port}${config.api.prefix}/health`
+      Logger.startup(
+        `Health Check: http://localhost:${config.port}${config.api.prefix}/health`
       );
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    Logger.error('Failed to start server', { error });
     process.exit(1);
   }
 }
 
 // Handle graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('🛑 SIGTERM received, shutting down gracefully...');
+  Logger.shutdown('SIGTERM received, shutting down gracefully...');
   await closeDatabase();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  console.log('🛑 SIGINT received, shutting down gracefully...');
+  Logger.shutdown('SIGINT received, shutting down gracefully...');
   await closeDatabase();
   process.exit(0);
 });

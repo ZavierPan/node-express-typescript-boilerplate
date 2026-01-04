@@ -10,6 +10,7 @@ A modern Node.js Express TypeScript backend API template project with complete a
 - **JWT Authentication** - Complete authentication system with role-based access control
 - **Database Integration** - TypeORM with MySQL support and automatic migrations
 - **Unified API Response** - Consistent response format across all endpoints
+- **Logging System** - Comprehensive Winston-based logging with structured logs and file rotation
 - **Security** - Helmet and CORS protection
 - **ESLint + Prettier** - Code quality and formatting
 - **Modular Architecture** - Well-organized project structure with response types
@@ -139,6 +140,24 @@ npm run docker:compose:down
 | `npm run docker:compose:down:dev` | Stop development environment |
 | `npm run docker:compose:up` | Start production environment |
 | `npm run docker:compose:down` | Stop production environment |
+
+### When to Rebuild Docker Images
+
+You need to rebuild Docker images when:
+- **Dependencies change** (package.json modifications)
+- **Build configuration changes** (tsconfig.json, tsoa.json modifications)
+- **Dockerfile changes**
+
+```bash
+# Force rebuild and start (development)
+docker-compose -f docker-compose.dev.yml up --build
+
+# Force rebuild and start (production)
+docker-compose -f docker-compose.yml up --build
+
+# Or rebuild specific service
+docker-compose -f docker-compose.dev.yml build app
+```
 
 ### Docker Features
 
@@ -497,6 +516,163 @@ npm run db:migration:run:prod
 - **Backup database**: Always backup database before running migrations in production
 - **Review SQL**: Check generated SQL statements before execution
 
+## 📊 Logging System
+
+This project includes a comprehensive logging system built with Winston, providing structured logging, file rotation, and different log levels for development and production environments.
+
+### Logging Features
+
+- **Winston-based logging** with structured JSON format
+- **Multiple log levels**: error, warn, info, http, debug
+- **File rotation** with daily rotation and automatic compression
+- **Console logging** in development with colorized output
+- **HTTP request/response logging** middleware
+- **Security event logging** for authentication and authorization
+- **Database operation logging**
+- **Performance metrics logging**
+
+### Log Configuration
+
+Logging is configured through environment variables:
+
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `LOG_LEVEL` | Minimum log level | `info` | `debug`, `info`, `warn`, `error` |
+| `LOG_ENABLE_FILE` | Enable file logging | `false` | `true` |
+| `LOG_MAX_FILE_SIZE` | Maximum file size before rotation | `20m` | `10m`, `50m` |
+| `LOG_MAX_FILES` | Number of files to keep | `14d` | `7d`, `30d` |
+| `LOG_ENABLE_HTTP` | Enable HTTP request logging | `false` | `true` |
+
+### Log Files Structure
+
+```
+logs/
+├── combined-YYYY-MM-DD.log     # All log levels
+├── error-YYYY-MM-DD.log        # Error logs only
+├── access-YYYY-MM-DD.log       # HTTP access logs
+├── exceptions-YYYY-MM-DD.log   # Uncaught exceptions
+└── rejections-YYYY-MM-DD.log   # Unhandled promise rejections
+```
+
+### Using the Logger
+
+#### Basic Logging
+
+```typescript
+import Logger from '../utils/logger';
+
+// Basic log levels
+Logger.error('Something went wrong', { error, userId: '123' });
+Logger.warn('Warning message', { context: 'additional data' });
+Logger.info('Information message');
+Logger.debug('Debug information', { details: 'debug data' });
+```
+
+#### Specialized Logging Methods
+
+```typescript
+// Database operations
+Logger.database('SELECT', 'users', { userId: '123', query: 'SELECT * FROM users' });
+
+// Authentication events
+Logger.auth('login_success', '123', { ip: '192.168.1.1' });
+Logger.auth('login_failed', undefined, { email: 'user@example.com', ip: '192.168.1.1' });
+
+// API requests (automatically logged by middleware)
+Logger.api('GET', '/api/users', 200, 150, '123', { ip: '192.168.1.1' });
+
+// Security events
+Logger.security('unauthorized_access', {
+  userId: '123',
+  resource: '/admin/users',
+  ip: '192.168.1.1'
+});
+
+// Performance metrics
+Logger.performance('database_query', 250, 'ms', {
+  query: 'SELECT * FROM users',
+  table: 'users'
+});
+
+// Application lifecycle
+Logger.startup('Server started on port 3000');
+Logger.shutdown('Graceful shutdown initiated');
+```
+
+### HTTP Request Logging
+
+The application automatically logs all HTTP requests and responses when `LOG_ENABLE_HTTP=true`:
+
+```json
+{
+  "level": "http",
+  "message": "API Request",
+  "method": "GET",
+  "url": "/api/users/profile",
+  "statusCode": 200,
+  "responseTime": 45,
+  "userId": "123",
+  "ip": "192.168.1.1",
+  "userAgent": "Mozilla/5.0...",
+  "contentLength": "1024",
+  "timestamp": "2023-12-01T10:30:00.000Z"
+}
+```
+
+### Security Event Logging
+
+Security-related events are automatically logged:
+
+```typescript
+// Authentication attempts
+securityLoggingMiddleware.logAuthAttempt(
+  'user@example.com',
+  true,
+  '192.168.1.1',
+  'Mozilla/5.0...'
+);
+
+// Unauthorized access attempts
+securityLoggingMiddleware.logUnauthorizedAccess(req, 'Invalid JWT token');
+
+// Suspicious activities
+securityLoggingMiddleware.logSuspiciousActivity('Multiple failed login attempts', {
+  email: 'user@example.com',
+  attempts: 5,
+  timeWindow: '5 minutes'
+});
+```
+
+### Development vs Production
+
+**Development Environment:**
+- Console logging enabled with colors
+- Debug level logging
+- File logging enabled
+- HTTP request logging enabled
+
+**Production Environment:**
+- Console logging disabled
+- Info level logging (errors and warnings)
+- File logging enabled
+- HTTP request logging configurable
+- Log compression and rotation
+
+### Log Analysis
+
+Log files are in JSON format for easy parsing and analysis:
+
+```bash
+# View recent errors
+tail -f logs/error-$(date +%Y-%m-%d).log | jq '.'
+
+# Search for specific user activity
+grep "userId.*123" logs/combined-$(date +%Y-%m-%d).log | jq '.'
+
+# Monitor API performance
+grep "API Request" logs/access-$(date +%Y-%m-%d).log | jq '.responseTime'
+```
+
 ## 🔄 Development Workflow
 
 1. **Start development server**: `npm run dev`
@@ -506,6 +682,7 @@ npm run db:migration:run:prod
 5. **Test endpoints** using Swagger UI at `http://localhost:3000/api-docs`
 6. **Check code quality**: `npm run lint`
 7. **Format code**: `npm run format`
+8. **Monitor logs**: Check `logs/` directory for application logs
 
 ## 🚀 Production Deployment
 
@@ -558,7 +735,7 @@ This boilerplate is designed to be extended with additional features:
 - [x] Environment variable configuration with dotenv
 - [x] Database integration (TypeORM + MySQL)
 - [x] Docker containerization with multi-stage builds and health checks
-- [ ] Logging system
+- [x] Logging system
 - [ ] Testing framework
 - [ ] Rate limiting
 - [ ] API versioning

@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { config } from './index';
+import Logger from '../utils/logger';
 
 /**
  * TypeORM DataSource configuration
@@ -40,10 +41,10 @@ export async function initializeDatabase(): Promise<void> {
   try {
     if (!AppDataSource.isInitialized) {
       await AppDataSource.initialize();
-      console.log('✅ Database connection established successfully');
+      Logger.database('connection', 'established', { status: 'success' });
     }
   } catch (error) {
-    console.error('❌ Error during database initialization:', error);
+    Logger.error('Error during database initialization', { error });
     throw error;
   }
 }
@@ -56,10 +57,10 @@ export async function closeDatabase(): Promise<void> {
   try {
     if (AppDataSource.isInitialized) {
       await AppDataSource.destroy();
-      console.log('✅ Database connection closed successfully');
+      Logger.database('connection', 'closed', { status: 'success' });
     }
   } catch (error) {
-    console.error('❌ Error during database closure:', error);
+    Logger.error('Error during database closure', { error });
     throw error;
   }
 }
@@ -76,15 +77,15 @@ export async function runMigrations(): Promise<void> {
 
     const migrations = await AppDataSource.runMigrations();
     if (migrations.length > 0) {
-      console.log(
-        `✅ Ran ${migrations.length} migration(s):`,
-        migrations.map((m) => m.name)
-      );
+      Logger.database('migrations', 'completed', {
+        count: migrations.length,
+        migrationNames: migrations.map((m) => m.name),
+      });
     } else {
-      console.log('✅ No pending migrations to run');
+      Logger.database('migrations', 'none_pending', {});
     }
   } catch (error) {
-    console.error('❌ Error running migrations:', error);
+    Logger.error('Error running migrations', { error });
     throw error;
   }
 }

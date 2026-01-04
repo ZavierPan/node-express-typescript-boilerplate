@@ -65,6 +65,15 @@ export const config = {
     synchronize: process.env.DB_SYNCHRONIZE === 'true',
     logging: process.env.DB_LOGGING === 'true',
   },
+
+  // Logging Configuration
+  logging: {
+    level: process.env.LOG_LEVEL || 'info',
+    enableFileLogging: process.env.LOG_ENABLE_FILE === 'true',
+    maxFileSize: process.env.LOG_MAX_FILE_SIZE || '20m',
+    maxFiles: process.env.LOG_MAX_FILES || '14d',
+    enableHttpLogging: process.env.LOG_ENABLE_HTTP === 'true',
+  },
 };
 
 export default config;

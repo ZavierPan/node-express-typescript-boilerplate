@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import config from '../config';
+import Logger from '../utils/logger';
 
 /**
  * Simple authentication error for TSOA
@@ -87,11 +88,19 @@ export async function expressAuthentication(
       if (scopes && scopes.length > 0) {
         // TODO: Implement scope checking logic based on user role
         // For now, we'll just log the required scopes
-        console.log('Required scopes:', scopes);
-        console.log('User role:', user.role);
+        Logger.debug('Checking user permissions', {
+          requiredScopes: scopes,
+          userRole: user.role,
+          userId: user.id,
+        });
 
         // Example scope checking (customize based on your needs)
         if (scopes.includes('admin') && user.role !== 'admin') {
+          Logger.security('Insufficient permissions for admin access', {
+            userId: user.id,
+            userRole: user.role,
+            requiredScopes: scopes,
+          });
           throw new AuthError(403, 'Insufficient permissions');
         }
       }

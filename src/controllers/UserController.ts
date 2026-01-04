@@ -20,6 +20,7 @@ import {
 } from './response/user.res';
 import { UserService } from '../services/UserService';
 import { AuthenticatedRequest } from '../middleware/authentication';
+import Logger from '../utils/logger';
 
 /**
  * User controller
@@ -86,7 +87,10 @@ export class UserController extends Controller {
         'Profile retrieved successfully'
       );
     } catch (error) {
-      console.error('Get profile error:', error);
+      Logger.error('Get profile error', {
+        error,
+        userId: (request as AuthenticatedRequest).user?.id,
+      });
       return ApiResponseBuilder.internalError('Failed to retrieve profile');
     }
   }
@@ -170,7 +174,10 @@ export class UserController extends Controller {
         'Dashboard data retrieved successfully'
       );
     } catch (error) {
-      console.error('Get dashboard error:', error);
+      Logger.error('Get dashboard error', {
+        error,
+        userId: (request as AuthenticatedRequest).user?.id,
+      });
       return ApiResponseBuilder.internalError(
         'Failed to retrieve dashboard data'
       );
@@ -233,7 +240,10 @@ export class UserController extends Controller {
         'Users retrieved successfully'
       );
     } catch (error) {
-      console.error('Get users error:', error);
+      Logger.error('Get users error', {
+        error,
+        userId: (request as AuthenticatedRequest)?.user?.id,
+      });
       return ApiResponseBuilder.internalError('Failed to retrieve users');
     }
   }

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import Logger from '../utils/logger';
 
 /**
  * Error response interface
@@ -31,10 +32,13 @@ export function errorHandler(
 ): Response | void {
   // Handle TSOA validation errors
   if (err.name === 'ValidateError') {
-    console.warn(
-      `Caught Validation Error for ${req.path}:`,
-      (err as ValidationError).fields
-    );
+    Logger.warn(`Validation Error for ${req.path}`, {
+      path: req.path,
+      method: req.method,
+      fields: (err as ValidationError).fields,
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+    });
     const errorResponse: ErrorResponse = {
       success: false,
       error: {
@@ -49,6 +53,13 @@ export function errorHandler(
 
   // Handle authentication errors
   if (err.name === 'AuthError') {
+    Logger.security('Authentication Error', {
+      path: req.path,
+      method: req.method,
+      message: err.message,
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+    });
     const errorResponse: ErrorResponse = {
       success: false,
       error: {
@@ -63,7 +74,19 @@ export function errorHandler(
   }
 
   // Default error handler
-  console.error('Unhandled error:', err);
+  Logger.error('Unhandled error', {
+    error: {
+      name: err.name,
+      message: err.message,
+      stack: err.stack,
+    },
+    request: {
+      path: req.path,
+      method: req.method,
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+    },
+  });
   const errorResponse: ErrorResponse = {
     success: false,
     error: {
@@ -81,6 +104,13 @@ export function errorHandler(
  * 404 Not Found handler
  */
 export function notFoundHandler(req: Request, res: Response): Response {
+  Logger.warn('Route not found', {
+    path: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+    userAgent: req.get('User-Agent'),
+  });
+
   const errorResponse: ErrorResponse = {
     success: false,
     error: {
