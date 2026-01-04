@@ -737,6 +737,7 @@ This boilerplate is designed to be extended with additional features:
 - [x] Docker containerization with multi-stage builds and health checks
 - [x] Logging system
 - [ ] Testing framework
+- [ ] GitHub Actions CI/CD pipeline
 - [ ] Rate limiting
 - [ ] API versioning
 
