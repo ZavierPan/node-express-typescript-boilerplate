@@ -3,7 +3,7 @@
  * Tests for user service business logic
  */
 
-import { UserService } from '../../../services/UserService';
+import { UserService } from '../../../src/services/UserService';
 import {
   initTestDatabase,
   closeTestDatabase,

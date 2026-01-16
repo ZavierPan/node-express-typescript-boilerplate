@@ -4,8 +4,8 @@
  */
 
 import { DataSource } from 'typeorm';
-import { AppDataSource } from '../../config/database';
-import { User } from '../../entities/User';
+import { AppDataSource } from '../../src/config/database';
+import { User } from '../../src/entities/User';
 
 /**
  * Initialize test database connection

@@ -7,7 +7,7 @@ module.exports = {
   testEnvironment: 'node',
 
   // Root directory for tests
-  roots: ['<rootDir>/src'],
+  roots: ['<rootDir>/__tests__'],
 
   // Test file patterns
   testMatch: [
@@ -60,7 +60,7 @@ module.exports = {
   coverageDirectory: 'coverage',
 
   // Setup files to run before tests
-  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/__tests__/setup.ts'],
 
   // Clear mocks between tests
   clearMocks: true,

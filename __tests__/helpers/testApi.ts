@@ -4,8 +4,8 @@
  */
 
 import request from 'supertest';
-import app from '../../index';
-import { generateToken } from '../../middleware/authentication';
+import app from '../../src/index';
+import { generateToken } from '../../src/middleware/authentication';
 
 /**
  * Get supertest request instance

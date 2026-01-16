@@ -3,8 +3,8 @@
  * Runs before each test file
  */
 
-import { AppDataSource } from '../config/database';
-import logger from '../config/logger';
+import { AppDataSource } from '../src/config/database';
+import logger from '../src/config/logger';
 
 // Set test environment
 process.env.NODE_ENV = 'test';

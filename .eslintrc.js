@@ -33,7 +33,7 @@ module.exports = {
   ignorePatterns: [
     '.eslintrc.js',           // Ignore this configuration file itself
     'dist/**/*',              // Ignore all files in the dist directory
-    'src/__tests__/**/*',      // Ignore test files
+    '__tests__/**/*',      // Ignore test files
     'jest.config.js'          // Ignore Jest configuration file
   ],
   
