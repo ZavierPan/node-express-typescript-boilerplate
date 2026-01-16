@@ -59,6 +59,15 @@ if (config.nodeEnv === 'development') {
   );
 }
 
+// Silent transport for test environment to avoid warnings
+if (config.nodeEnv === 'test') {
+  transports.push(
+    new winston.transports.Console({
+      silent: true,
+    })
+  );
+}
+
 // File transports (enabled based on configuration)
 if (config.logging.enableFileLogging) {
   // Combined logs (all levels)

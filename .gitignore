@@ -76,6 +76,7 @@ web_modules/
 
 # Allow tracked environment templates (no secrets, safe to commit)
 !.env.dev
+!.env.test
 !.env.production
 
 # parcel-bundler cache (https://parceljs.org/)

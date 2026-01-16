@@ -6,8 +6,8 @@ import { BaseSuccessResponse, ApiResponse } from './common.res';
 
 /** Login request interface */
 export interface LoginRequest {
-  email: string;
-  password: string;
+  email?: string;
+  password?: string;
 }
 
 /** Login success response data */

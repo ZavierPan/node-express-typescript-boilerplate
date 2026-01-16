@@ -119,7 +119,9 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-// Start the application
-startServer();
+// Start the application only if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
 
 export default app;

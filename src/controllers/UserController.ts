@@ -51,12 +51,14 @@ export class UserController extends Controller {
       const user = (request as AuthenticatedRequest).user;
 
       if (!user) {
+        this.setStatus(401);
         return ApiResponseBuilder.unauthorized('User not authenticated');
       }
 
       // Get user from database
       const dbUser = await this.userService.findById(parseInt(user.id));
       if (!dbUser) {
+        this.setStatus(404);
         return ApiResponseBuilder.notFound('User not found');
       }
 
@@ -91,6 +93,7 @@ export class UserController extends Controller {
         error,
         userId: (request as AuthenticatedRequest).user?.id,
       });
+      this.setStatus(500);
       return ApiResponseBuilder.internalError('Failed to retrieve profile');
     }
   }
@@ -111,12 +114,14 @@ export class UserController extends Controller {
       const user = (request as AuthenticatedRequest).user;
 
       if (!user) {
+        this.setStatus(401);
         return ApiResponseBuilder.unauthorized('User not authenticated');
       }
 
       // Get user from database
       const dbUser = await this.userService.findById(parseInt(user.id));
       if (!dbUser) {
+        this.setStatus(404);
         return ApiResponseBuilder.notFound('User not found');
       }
 
@@ -178,6 +183,7 @@ export class UserController extends Controller {
         error,
         userId: (request as AuthenticatedRequest).user?.id,
       });
+      this.setStatus(500);
       return ApiResponseBuilder.internalError(
         'Failed to retrieve dashboard data'
       );
@@ -206,10 +212,12 @@ export class UserController extends Controller {
       const user = (request as AuthenticatedRequest)?.user;
 
       if (!user) {
+        this.setStatus(401);
         return ApiResponseBuilder.unauthorized('User not authenticated');
       }
 
       if (user.role !== 'admin') {
+        this.setStatus(403);
         return ApiResponseBuilder.forbidden('Admin access required');
       }
 
@@ -244,6 +252,7 @@ export class UserController extends Controller {
         error,
         userId: (request as AuthenticatedRequest)?.user?.id,
       });
+      this.setStatus(500);
       return ApiResponseBuilder.internalError('Failed to retrieve users');
     }
   }

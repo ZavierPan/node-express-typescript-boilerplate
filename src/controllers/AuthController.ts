@@ -47,6 +47,7 @@ export class AuthController extends Controller {
 
     // Input validation
     if (!email || !password) {
+      this.setStatus(400);
       return ApiResponseBuilder.badRequest('Email and password are required');
     }
 
@@ -55,6 +56,7 @@ export class AuthController extends Controller {
       const user = await this.userService.findByEmailWithPassword(email);
       if (!user) {
         Logger.security('Login failed - user not found', { email });
+        this.setStatus(401);
         return ApiResponseBuilder.unauthorized('Invalid email or password');
       }
 
@@ -64,6 +66,7 @@ export class AuthController extends Controller {
           email,
           userId: user.id,
         });
+        this.setStatus(401);
         return ApiResponseBuilder.unauthorized('Account is deactivated');
       }
 
@@ -74,6 +77,7 @@ export class AuthController extends Controller {
           email,
           userId: user.id,
         });
+        this.setStatus(401);
         return ApiResponseBuilder.unauthorized('Invalid email or password');
       }
 
@@ -110,6 +114,7 @@ export class AuthController extends Controller {
       );
     } catch (error) {
       Logger.error('Login error', { error, email });
+      this.setStatus(500);
       return ApiResponseBuilder.internalError('An error occurred during login');
     }
   }

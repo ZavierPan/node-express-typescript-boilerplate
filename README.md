@@ -11,6 +11,7 @@ A modern Node.js Express TypeScript backend API template project with complete a
 - **Database Integration** - TypeORM with MySQL support and automatic migrations
 - **Unified API Response** - Consistent response format across all endpoints
 - **Logging System** - Comprehensive Winston-based logging with structured logs and file rotation
+- **Testing Framework** - Complete Jest + Supertest setup with unit, integration, and E2E tests
 - **Security** - Helmet and CORS protection
 - **ESLint + Prettier** - Code quality and formatting
 - **Modular Architecture** - Well-organized project structure with response types
@@ -233,16 +234,29 @@ docker-compose -f docker-compose.dev.yml build app
 
 ## 🔧 Available Scripts
 
+### Development
 - `npm run dev` - Start development server with hot reload (includes Swagger generation)
 - `npm run build` - Build production version (includes Swagger generation)
 - `npm run start` - Start production server
 - `npm run swagger` - Generate TSOA routes and Swagger documentation
 - `npm run clean` - Clean dist directory
+
+### Code Quality
 - `npm run lint` - Run ESLint code quality check
 - `npm run lint:fix` - Run ESLint and fix issues automatically
 - `npm run format` - Format code with Prettier
 - `npm run format:check` - Check code formatting with Prettier
 - `npm run typecheck` - Run TypeScript type checking
+
+### Testing
+- `npm test` - Run all tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Run tests with coverage report
+- `npm run test:unit` - Run unit tests only
+- `npm run test:integration` - Run integration tests only
+- `npm run test:e2e` - Run E2E tests only
+
+### Database
 - `npm run db:migration:generate` - Auto-generate migration from entity changes (compares entities with database)
 - `npm run db:migration:create` - Create empty migration file
 - `npm run db:migration:run` - Run pending migrations (development)
@@ -673,16 +687,243 @@ grep "userId.*123" logs/combined-$(date +%Y-%m-%d).log | jq '.'
 grep "API Request" logs/access-$(date +%Y-%m-%d).log | jq '.responseTime'
 ```
 
+## 🧪 Testing
+
+This project includes a comprehensive testing framework using Jest and Supertest, with support for unit tests, integration tests, and end-to-end (E2E) tests.
+
+### Testing Stack
+
+- **Jest** - Testing framework with built-in coverage reporting
+- **Supertest** - HTTP assertion library for API testing
+- **ts-jest** - TypeScript support for Jest
+- **Test Database** - Separate test database configuration
+
+### Test Structure
+
+```
+src/__tests__/
+├── setup.ts                    # Jest setup file
+├── helpers/                    # Test helper functions
+│   ├── testDatabase.ts        # Database utilities
+│   └── testApi.ts             # API testing utilities
+├── unit/                      # Unit tests
+│   └── services/
+│       └── UserService.test.ts
+├── integration/               # Integration tests
+│   └── api/
+│       └── auth.test.ts
+└── e2e/                       # End-to-end tests
+    └── userFlow.test.ts
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode (useful during development)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Run specific test types
+npm run test:unit          # Unit tests only
+npm run test:integration   # Integration tests only
+npm run test:e2e          # E2E tests only
+```
+
+### Test Database Setup
+
+Before running tests, create a test database:
+
+```sql
+CREATE DATABASE node_express_boilerplate_test;
+```
+
+The test environment uses `.env.test` configuration file with a separate database to avoid affecting development data.
+
+### Writing Tests
+
+#### Unit Test Example
+
+```typescript
+import { UserService } from '../../../services/UserService';
+import { createTestUser } from '../../helpers/testDatabase';
+
+describe('UserService', () => {
+  let userService: UserService;
+
+  beforeEach(async () => {
+    await clearDatabase();
+    userService = new UserService();
+  });
+
+  it('should create a new user', async () => {
+    const user = await userService.createUser({
+      email: 'test@example.com',
+      name: 'Test User',
+      password: 'password123',
+    });
+
+    expect(user).toBeDefined();
+    expect(user.email).toBe('test@example.com');
+  });
+});
+```
+
+#### Integration Test Example
+
+```typescript
+import request from 'supertest';
+import app from '../../../index';
+
+describe('Authentication API', () => {
+  it('should login successfully', async () => {
+    await createTestUser({
+      email: 'test@example.com',
+      password: 'password123',
+    });
+
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: 'test@example.com',
+        password: 'password123',
+      })
+      .expect(200);
+
+    expect(response.body.data).toHaveProperty('token');
+  });
+});
+```
+
+#### E2E Test Example
+
+```typescript
+describe('User Flow E2E', () => {
+  it('should complete full user journey', async () => {
+    // 1. Create user
+    await createTestUser({ email: 'user@example.com', password: 'pass123' });
+
+    // 2. Login
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'user@example.com', password: 'pass123' });
+
+    const token = loginRes.body.data.token;
+
+    // 3. Access protected route
+    const profileRes = await request(app)
+      .get('/api/users/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(profileRes.body.data.email).toBe('user@example.com');
+  });
+});
+```
+
+### Test Coverage
+
+View coverage report after running tests:
+
+```bash
+npm run test:coverage
+```
+
+Coverage reports are generated in the `coverage/` directory:
+- `coverage/lcov-report/index.html` - HTML coverage report
+- `coverage/coverage-summary.json` - JSON summary
+
+### Coverage Thresholds
+
+The project enforces minimum coverage thresholds:
+- **Branches**: 50%
+- **Functions**: 50%
+- **Lines**: 50%
+- **Statements**: 50%
+
+### Test Helpers
+
+#### Database Helpers
+
+```typescript
+import {
+  initTestDatabase,
+  closeTestDatabase,
+  clearDatabase,
+  createTestUser,
+  createTestAdmin,
+} from '../helpers/testDatabase';
+
+// Initialize database connection
+await initTestDatabase();
+
+// Clear all data
+await clearDatabase();
+
+// Create test users
+const user = await createTestUser({ email: 'test@example.com' });
+const admin = await createTestAdmin({ email: 'admin@example.com' });
+
+// Close connection
+await closeTestDatabase();
+```
+
+#### API Helpers
+
+```typescript
+import {
+  authenticatedGet,
+  authenticatedPost,
+  assertSuccessResponse,
+  assertErrorResponse,
+} from '../helpers/testApi';
+
+// Make authenticated requests
+const response = await authenticatedGet('/api/users/profile', token);
+
+// Assert response structure
+assertSuccessResponse(response, 200);
+assertErrorResponse(response, 401);
+```
+
+### Best Practices
+
+1. **Isolate Tests**: Each test should be independent and not rely on other tests
+2. **Clean Database**: Clear database before each test to ensure clean state
+3. **Use Factories**: Use helper functions to create test data consistently
+4. **Test Edge Cases**: Test both success and failure scenarios
+5. **Meaningful Names**: Use descriptive test names that explain what is being tested
+6. **Arrange-Act-Assert**: Follow the AAA pattern for test structure
+
+### Continuous Integration
+
+Tests can be integrated into CI/CD pipelines:
+
+```yaml
+# Example GitHub Actions workflow
+- name: Run tests
+  run: npm test
+
+- name: Upload coverage
+  run: npm run test:coverage
+```
+
 ## 🔄 Development Workflow
 
 1. **Start development server**: `npm run dev`
 2. **Make changes** to TypeScript files in `src/`
 3. **Server automatically restarts** when files change
 4. **TSOA regenerates** routes and Swagger documentation automatically
-5. **Test endpoints** using Swagger UI at `http://localhost:3000/api-docs`
-6. **Check code quality**: `npm run lint`
-7. **Format code**: `npm run format`
-8. **Monitor logs**: Check `logs/` directory for application logs
+5. **Write tests** for new features in `src/__tests__/`
+6. **Run tests**: `npm test`
+7. **Test endpoints** using Swagger UI at `http://localhost:3000/api-docs`
+8. **Check code quality**: `npm run lint`
+9. **Format code**: `npm run format`
+10. **Monitor logs**: Check `logs/` directory for application logs
 
 ## 🚀 Production Deployment
 
@@ -736,7 +977,7 @@ This boilerplate is designed to be extended with additional features:
 - [x] Database integration (TypeORM + MySQL)
 - [x] Docker containerization with multi-stage builds and health checks
 - [x] Logging system
-- [ ] Testing framework
+- [x] Testing framework (Jest + Supertest with unit, integration, and E2E tests)
 - [ ] GitHub Actions CI/CD pipeline
 - [ ] Rate limiting
 - [ ] API versioning

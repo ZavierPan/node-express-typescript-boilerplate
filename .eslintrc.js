@@ -32,7 +32,9 @@ module.exports = {
   // Ignore Patterns: Files and directories to ignore during linting
   ignorePatterns: [
     '.eslintrc.js',           // Ignore this configuration file itself
-    'dist/**/*'               // Ignore all files in the dist directory
+    'dist/**/*',              // Ignore all files in the dist directory
+    'src/__tests__/**/*',      // Ignore test files
+    'jest.config.js'          // Ignore Jest configuration file
   ],
   
   // Rules: Specific linting rules configuration
