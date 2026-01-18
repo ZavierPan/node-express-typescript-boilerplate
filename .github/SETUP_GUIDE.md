@@ -1,70 +1,70 @@
-# GitHub Actions CI/CD 快速設定指南
+# GitHub Actions CI/CD Quick Setup Guide
 
-本指南將協助你快速設定 GitHub Actions CI/CD pipeline。
+This guide will help you quickly set up the GitHub Actions CI/CD pipeline.
 
-## 📋 前置需求
+## 📋 Prerequisites
 
-- GitHub 帳號
-- Docker Hub 帳號（僅 CD pipeline 需要）
-- Codecov 帳號（可選，用於測試覆蓋率報告）
+- GitHub account
+- Docker Hub account (required for CD pipeline only)
+- Codecov account (optional, for test coverage reports)
 
-## 🚀 快速開始
+## 🚀 Quick Start
 
-### 步驟 1: Fork 或 Clone 專案
+### Step 1: Fork or Clone the Project
 
 ```bash
 git clone <your-repo-url>
 cd node-express-typescript-boilerplate
 ```
 
-### 步驟 2: 設定 GitHub Secrets
+### Step 2: Configure GitHub Secrets
 
-前往你的 GitHub repository：
+Navigate to your GitHub repository:
 **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
 
-#### CI Pipeline 所需 Secrets（可選）
+#### CI Pipeline Secrets (Optional)
 
-| Secret 名稱 | 說明 | 如何取得 |
-|------------|------|---------|
-| `CODECOV_TOKEN` | Codecov 上傳 token | 1. 前往 [codecov.io](https://codecov.io/)<br>2. 使用 GitHub 登入<br>3. 啟用你的 repository<br>4. 複製 token |
+| Secret Name | Description | How to Obtain |
+|------------|-------------|---------------|
+| `CODECOV_TOKEN` | Codecov upload token | 1. Go to [codecov.io](https://codecov.io/)<br>2. Sign in with GitHub<br>3. Enable your repository<br>4. Copy the token |
 
-#### CD Pipeline 所需 Secrets（必要）
+#### CD Pipeline Secrets (Required)
 
-| Secret 名稱 | 說明 | 如何取得 |
-|------------|------|---------|
-| `DOCKER_USERNAME` | Docker Hub 使用者名稱 | 你的 Docker Hub 帳號名稱 |
-| `DOCKER_PASSWORD` | Docker Hub 存取 token | 1. 登入 [Docker Hub](https://hub.docker.com/)<br>2. Account Settings → Security<br>3. New Access Token<br>4. 權限選擇: Read, Write, Delete<br>5. 複製產生的 token |
+| Secret Name | Description | How to Obtain |
+|------------|-------------|---------------|
+| `DOCKER_USERNAME` | Docker Hub username | Your Docker Hub account username |
+| `DOCKER_PASSWORD` | Docker Hub access token | 1. Log in to [Docker Hub](https://hub.docker.com/)<br>2. Account Settings → Security<br>3. New Access Token<br>4. Permissions: Read, Write, Delete<br>5. Copy the generated token |
 
-### 步驟 3: 更新 README.md 徽章
+### Step 3: Update README.md Badges
 
-將 README.md 中的徽章 URL 更新為你的 repository：
+Update the badge URLs in README.md with your repository information:
 
 ```markdown
-# 將 YOUR_USERNAME 和 YOUR_REPO 替換為實際值
+# Replace YOUR_USERNAME and YOUR_REPO with actual values
 [![CI](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml)
 [![CD](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/cd.yml/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/cd.yml)
 [![codecov](https://codecov.io/gh/YOUR_USERNAME/YOUR_REPO/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_USERNAME/YOUR_REPO)
 ```
 
-例如：
+Example:
 ```markdown
 [![CI](https://github.com/johndoe/my-api/actions/workflows/ci.yml/badge.svg)](https://github.com/johndoe/my-api/actions/workflows/ci.yml)
 ```
 
-### 步驟 4: 更新 CD Workflow（可選）
+### Step 4: Update CD Workflow (Optional)
 
-如果你的 Docker Hub repository 名稱不同，需要更新 [`.github/workflows/cd.yml`](.github/workflows/cd.yml)：
+If your Docker Hub repository name is different, update [`.github/workflows/cd.yml`](.github/workflows/cd.yml):
 
 ```yaml
-# 找到這一行並更新
+# Find this line and update
 images: ${{ secrets.DOCKER_USERNAME }}/node-express-typescript-boilerplate
-# 改為你的 repository 名稱
+# Change to your repository name
 images: ${{ secrets.DOCKER_USERNAME }}/your-repo-name
 ```
 
-### 步驟 5: 測試 CI Pipeline
+### Step 5: Test CI Pipeline
 
-推送程式碼到 GitHub 觸發 CI pipeline：
+Push code to GitHub to trigger the CI pipeline:
 
 ```bash
 git add .
@@ -72,78 +72,78 @@ git commit -m "feat: setup CI/CD pipeline"
 git push origin main
 ```
 
-前往 GitHub repository 的 **Actions** 頁面查看執行狀態。
+Go to the **Actions** page in your GitHub repository to view the execution status.
 
-### 步驟 6: 測試 CD Pipeline（可選）
+### Step 6: Test CD Pipeline (Optional)
 
-建立並推送版本標籤來觸發 CD pipeline：
+Create and push a version tag to trigger the CD pipeline:
 
 ```bash
-# 建立版本標籤
+# Create version tag
 git tag v1.0.0
 
-# 推送標籤
+# Push tag
 git push origin v1.0.0
 ```
 
-這將會：
-1. 建置 Docker 映像
-2. 推送到 Docker Hub
-3. 建立 GitHub Release
+This will:
+1. Build Docker image
+2. Push to Docker Hub
+3. Create GitHub Release
 
-## ✅ 驗證設定
+## ✅ Verify Setup
 
-### 檢查 CI Pipeline
+### Check CI Pipeline
 
-1. 前往 **Actions** 頁面
-2. 查看 "CI/CD Pipeline" workflow
-3. 確認所有 jobs 都成功執行：
+1. Go to the **Actions** page
+2. View the "CI/CD Pipeline" workflow
+3. Verify all jobs executed successfully:
    - ✅ Code Quality
    - ✅ Tests
    - ✅ Build
    - ✅ Docker Build Test
    - ✅ Security Audit
 
-### 檢查 CD Pipeline
+### Check CD Pipeline
 
-1. 前往 **Actions** 頁面
-2. 查看 "CD - Deploy to Docker Hub" workflow
-3. 確認 Docker 映像已推送到 Docker Hub
-4. 前往 **Releases** 頁面確認 Release 已建立
+1. Go to the **Actions** page
+2. View the "CD - Deploy to Docker Hub" workflow
+3. Verify Docker image was pushed to Docker Hub
+4. Go to the **Releases** page to confirm Release was created
 
-### 檢查測試覆蓋率（如果設定了 Codecov）
+### Check Test Coverage (if Codecov is configured)
 
-1. 前往 [codecov.io](https://codecov.io/)
-2. 查看你的 repository
-3. 確認覆蓋率報告已上傳
+1. Go to [codecov.io](https://codecov.io/)
+2. View your repository
+3. Verify coverage report was uploaded
 
-## 🔧 自訂設定
+## 🔧 Custom Configuration
 
-### 修改觸發條件
+### Modify Trigger Conditions
 
-編輯 [`.github/workflows/ci.yml`](.github/workflows/ci.yml)：
+Edit [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 ```yaml
 on:
   push:
-    branches: [main, develop, staging]  # 加入更多分支
+    branches: [main, develop, staging]  # Add more branches
   pull_request:
     branches: [main, develop]
 ```
 
-### 修改 Node.js 版本
+### Modify Node.js Versions
 
-編輯 workflow 檔案中的 matrix：
+Edit the strategy matrix in workflow files:
 
 ```yaml
 strategy:
   matrix:
-    node-version: [18.x, 20.x, 21.x]  # 加入更多版本
+    node-version: [18.x, 20.x, 21.x]  # Add more versions
 ```
 
-### 停用特定 Job
+### Disable Specific Jobs
 
-在 workflow 檔案中註解掉不需要的 job：
+Comment out jobs you don't need in the workflow file:
 
 ```yaml
 # jobs:
@@ -154,77 +154,77 @@ strategy:
 #       ...
 ```
 
-### 設定分支保護規則
+### Configure Branch Protection Rules
 
-前往 **Settings** → **Branches** → **Add rule**：
+Go to **Settings** → **Branches** → **Add rule**:
 
 1. Branch name pattern: `main`
 2. ✅ Require a pull request before merging
 3. ✅ Require status checks to pass before merging
-4. 選擇必要的狀態檢查：
+4. Select required status checks:
    - Code Quality
    - Tests
    - Build
    - Docker Build Test
 
-## 🐛 常見問題排除
+## 🐛 Troubleshooting
 
-### CI Pipeline 失敗
+### CI Pipeline Failures
 
-**問題**: 測試失敗
+**Issue**: Tests fail
 ```
 Error: connect ECONNREFUSED 127.0.0.1:3306
 ```
 
-**解決方案**: 確認 MySQL service 已正確設定，等待時間足夠。
+**Solution**: Ensure MySQL service is properly configured with sufficient wait time.
 
 ---
 
-**問題**: ESLint 錯誤
+**Issue**: ESLint errors
 ```
 Error: 'variable' is assigned a value but never used
 ```
 
-**解決方案**: 修正程式碼或在本地執行 `npm run lint:fix`。
+**Solution**: Fix the code or run `npm run lint:fix` locally.
 
-### CD Pipeline 失敗
+### CD Pipeline Failures
 
-**問題**: Docker Hub 登入失敗
+**Issue**: Docker Hub login fails
 ```
 Error: Error response from daemon: Get https://registry-1.docker.io/v2/: unauthorized
 ```
 
-**解決方案**: 
-1. 確認 `DOCKER_USERNAME` 和 `DOCKER_PASSWORD` secrets 已正確設定
-2. 確認 Docker Hub token 有正確的權限
+**Solution**: 
+1. Verify `DOCKER_USERNAME` and `DOCKER_PASSWORD` secrets are correctly set
+2. Ensure Docker Hub token has proper permissions
 
 ---
 
-**問題**: 映像推送失敗
+**Issue**: Image push fails
 ```
 Error: denied: requested access to the resource is denied
 ```
 
-**解決方案**: 
-1. 確認 Docker Hub repository 已建立
-2. 確認 repository 名稱正確
+**Solution**: 
+1. Verify Docker Hub repository exists
+2. Verify repository name is correct
 
-### Codecov 上傳失敗
+### Codecov Upload Failures
 
-**問題**: 覆蓋率上傳失敗
+**Issue**: Coverage upload fails
 ```
 Error: Codecov token not found
 ```
 
-**解決方案**: 
-1. 設定 `CODECOV_TOKEN` secret
-2. 或在 workflow 中設定 `fail_ci_if_error: false`（已預設）
+**Solution**: 
+1. Set `CODECOV_TOKEN` secret
+2. Or set `fail_ci_if_error: false` in workflow (already default)
 
-## 📚 進階設定
+## 📚 Advanced Configuration
 
-### 加入 Slack 通知
+### Add Slack Notifications
 
-在 workflow 中加入 Slack 通知步驟：
+Add Slack notification step to workflow:
 
 ```yaml
 - name: Slack Notification
@@ -236,9 +236,9 @@ Error: Codecov token not found
   if: always()
 ```
 
-### 加入效能測試
+### Add Performance Tests
 
-建立新的 job：
+Create a new job:
 
 ```yaml
 performance:
@@ -250,32 +250,32 @@ performance:
       run: npm run test:performance
 ```
 
-### 自動部署到雲端平台
+### Auto-deploy to Cloud Platforms
 
-參考各平台的 GitHub Actions 整合文件：
+Refer to platform-specific GitHub Actions integration documentation:
 - [AWS](https://github.com/aws-actions)
 - [Google Cloud](https://github.com/google-github-actions)
 - [Azure](https://github.com/Azure/actions)
 - [Heroku](https://github.com/marketplace/actions/deploy-to-heroku)
 
-## 🎯 最佳實踐
+## 🎯 Best Practices
 
-1. **保護敏感資訊**: 永遠使用 GitHub Secrets，不要在程式碼中硬編碼
-2. **定期更新依賴**: 使用 Dependabot 自動更新
-3. **監控 workflow 執行時間**: 優化慢速步驟
-4. **使用快取**: 已在 workflow 中設定 npm 快取
-5. **設定通知**: 在 GitHub 設定中啟用 Actions 通知
+1. **Protect Sensitive Information**: Always use GitHub Secrets, never hardcode in code
+2. **Regular Dependency Updates**: Use Dependabot for automatic updates
+3. **Monitor Workflow Execution Time**: Optimize slow steps
+4. **Use Caching**: npm cache is already configured in workflows
+5. **Set Up Notifications**: Enable Actions notifications in GitHub settings
 
-## 📖 相關文件
+## 📖 Related Documentation
 
-- [完整 GitHub Actions 文件](../docs/GITHUB_ACTIONS.md)
-- [GitHub Actions 官方文件](https://docs.github.com/en/actions)
-- [Docker Hub 文件](https://docs.docker.com/docker-hub/)
-- [Codecov 文件](https://docs.codecov.com/)
+- [Complete GitHub Actions Documentation](../docs/GITHUB_ACTIONS.md)
+- [GitHub Actions Official Documentation](https://docs.github.com/en/actions)
+- [Docker Hub Documentation](https://docs.docker.com/docker-hub/)
+- [Codecov Documentation](https://docs.codecov.com/)
 
-## 💡 需要協助？
+## 💡 Need Help?
 
-如果遇到問題：
-1. 查看 [GitHub Actions 文件](../docs/GITHUB_ACTIONS.md)
-2. 檢查 Actions 頁面的詳細日誌
-3. 在 repository 建立 Issue
+If you encounter issues:
+1. Check the [GitHub Actions Documentation](../docs/GITHUB_ACTIONS.md)
+2. Review detailed logs in the Actions page
+3. Create an Issue in the repository
