@@ -2,7 +2,7 @@ name: CD - Deploy to Docker Hub
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     tags:
       - 'v*.*.*'
   release:
