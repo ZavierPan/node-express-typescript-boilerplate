@@ -1,5 +1,11 @@
 # Node.js Express TypeScript Boilerplate
 
+[![CI](https://github.com/ZavierPan/node-express-typescript-boilerplate/actions/workflows/ci.yml/badge.svg)](https://github.com/ZavierPan/node-express-typescript-boilerplate/actions/workflows/ci.yml)
+[![CD](https://github.com/ZavierPan/node-express-typescript-boilerplate/actions/workflows/cd.yml/badge.svg)](https://github.com/ZavierPan/node-express-typescript-boilerplate/actions/workflows/cd.yml)
+[![codecov](https://codecov.io/gh/ZavierPan/node-express-typescript-boilerplate/branch/main/graph/badge.svg)](https://codecov.io/gh/ZavierPan/node-express-typescript-boilerplate)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
+
 A modern Node.js Express TypeScript backend API template project with complete authentication system, auto-generated API documentation, unified response format, and modular architecture.
 
 ## 🚀 Features
@@ -12,6 +18,7 @@ A modern Node.js Express TypeScript backend API template project with complete a
 - **Unified API Response** - Consistent response format across all endpoints
 - **Logging System** - Comprehensive Winston-based logging with structured logs and file rotation
 - **Testing Framework** - Complete Jest + Supertest setup with unit, integration, and E2E tests
+- **CI/CD Pipeline** - GitHub Actions for automated testing, building, and deployment
 - **Security** - Helmet and CORS protection
 - **ESLint + Prettier** - Code quality and formatting
 - **Modular Architecture** - Well-organized project structure with response types
@@ -901,7 +908,14 @@ assertErrorResponse(response, 401);
 
 ### Continuous Integration
 
-Tests can be integrated into CI/CD pipelines:
+Tests are automatically run in the CI/CD pipeline on every push and pull request. See the [GitHub Actions documentation](docs/GITHUB_ACTIONS.md) for more details.
+
+The CI pipeline includes:
+- ✅ Code quality checks (ESLint, Prettier, TypeScript)
+- ✅ Unit, integration, and E2E tests
+- ✅ Test coverage reporting
+- ✅ Docker build verification
+- ✅ Security audits
 
 ```yaml
 # Example GitHub Actions workflow
@@ -963,6 +977,41 @@ npm run build
 npm start
 ```
 
+## 🔄 CI/CD Pipeline
+
+This project includes a complete CI/CD pipeline using GitHub Actions. See [docs/GITHUB_ACTIONS.md](docs/GITHUB_ACTIONS.md) for detailed documentation.
+
+### CI Pipeline Features
+
+- **Automated Testing**: Runs on every push and pull request
+- **Multi-Version Testing**: Tests against Node.js 18.x and 20.x
+- **Code Quality Checks**: ESLint, Prettier, and TypeScript type checking
+- **Test Coverage**: Automatic coverage reporting with Codecov integration
+- **Docker Build Verification**: Ensures Docker images build successfully
+- **Security Audits**: npm audit for dependency vulnerabilities
+
+### CD Pipeline Features
+
+- **Automatic Deployment**: Deploys to Docker Hub on main branch pushes
+- **Multi-Platform Images**: Builds for linux/amd64 and linux/arm64
+- **Semantic Versioning**: Automatic tagging based on git tags
+- **GitHub Releases**: Auto-generates releases with changelogs
+
+### Quick Setup
+
+1. **Fork or clone this repository**
+2. **Set up GitHub Secrets** (for CD pipeline):
+   - `DOCKER_USERNAME`: Your Docker Hub username
+   - `DOCKER_PASSWORD`: Your Docker Hub access token
+   - `CODECOV_TOKEN`: Your Codecov token (optional)
+
+3. **Push to trigger CI/CD**:
+   ```bash
+   git push origin main
+   ```
+
+For detailed setup instructions, see [docs/GITHUB_ACTIONS.md](docs/GITHUB_ACTIONS.md).
+
 ## 🚧 Roadmap
 
 This boilerplate is designed to be extended with additional features:
@@ -978,7 +1027,7 @@ This boilerplate is designed to be extended with additional features:
 - [x] Docker containerization with multi-stage builds and health checks
 - [x] Logging system
 - [x] Testing framework (Jest + Supertest with unit, integration, and E2E tests)
-- [ ] GitHub Actions CI/CD pipeline
+- [x] GitHub Actions CI/CD pipeline
 - [ ] Rate limiting
 - [ ] API versioning
 
