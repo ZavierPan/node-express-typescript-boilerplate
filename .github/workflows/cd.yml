@@ -8,6 +8,11 @@ on:
   release:
     types: [published]
 
+# Required permissions for creating releases
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   # Job 1: Build and Push Docker Images
   docker-publish:
@@ -63,6 +68,8 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     needs: docker-publish
+    permissions:
+      contents: write
     
     steps:
       - name: Checkout code
