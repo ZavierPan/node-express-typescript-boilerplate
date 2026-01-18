@@ -75,6 +75,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate TSOA routes and Swagger
+        run: npm run swagger
+
       - name: Wait for MySQL
         run: |
           for i in {1..30}; do
