@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI - Test, Build, and Security Audit
 
 on:
   push:
